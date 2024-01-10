@@ -1,0 +1,8 @@
+[
+  {
+    "Error": "(code: -32003, message: Out of gas: gas required exceeds allowance: 30000000, data: None)",
+    "Objective": "To determine the count value in `setArray()` function of the Load contract that will cause the transaction to reach 60M block gas limit and in this way we won't have to retry it on the actual network where faucet is limited. Be it a testnet or mainnet.",
+    "Cause": "block limit set as 30,000,000",
+    "Solution": "We need to change this to 60,000,000 in the forge repo and then after build, use the `cast` binary to run."
+  }
+]
