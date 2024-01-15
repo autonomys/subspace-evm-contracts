@@ -141,6 +141,7 @@ contract SendersTreasury {
         if (senderBalance + msg.value < payRequest.amount) {
             revert InsufficientBalanceOf(msg.sender);
         }
+        balances[msg.sender] += msg.value;
 
         payRequests[requestId].signature = signature;
 

@@ -120,5 +120,11 @@ contract SendersTreasuryTest is Test {
         sendersTreasury.signPayReq{value: 10}(id, "");
     }
 
+    function test_SenderSignPayRequestFailWWrongReqId() public {}
+    function test_SenderSignPayRequestFailWhenWrongSender() public {}
+    function test_SenderSignPayRequestFailWhenInsufficientBal() public {}
+
+    // ===== claimPayment =====
+
     // TODO: Add more tests
 }
