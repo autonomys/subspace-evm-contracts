@@ -1,13 +1,17 @@
+/**
+ * Design:
+ * 1. [OPTIONAL] The contract is deployed with some initial funds.
+ * 2. The contract is given to the user.
+ * 3. The user requests a payment from the sender.
+ * 4. The sender signs the payment (like a checque) and sends it to the user.
+ * 5. The user claims the payment by submitting the signed payment or signature to the contract.
+ * 
+ *  Architecture diagram: https://github.com/subspace/subspace-evm-contracts/blob/add-receiver-pay-contract/img/sc-senders-treasury.png
+ */
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-/// Design:
-/// 1. The contract is deployed with some initial funds.
-/// 2. The contract is given to the user.
-/// 3. The user requests a payment from the sender.
-/// 4. The sender signs the payment and sends it to the user.
-/// 5. The user claims the payment by submitting the signed payment or signature to the contract.
-contract ReceiverPays {
+contract SendersTreasury {
     address owner = msg.sender;
 
     mapping(uint256 => bool) usedNonces;
@@ -15,6 +19,7 @@ contract ReceiverPays {
     constructor() payable {}
 
     // TODO: verify this
+    /// After having the sender's signature, the user can claim the payment.
     function claimPayment(uint256 amount, uint256 nonce, bytes memory signature) external {
         require(!usedNonces[nonce]);
         usedNonces[nonce] = true;
