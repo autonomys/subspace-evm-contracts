@@ -1,0 +1,39 @@
+{
+    "Counter": {
+        "address": "0x3d3dBD1Bef0645981A87569260e72f8485cCAf62",
+        "source_code": "https://github.com/subspace/subspace-evm-contracts/blob/b21233a675b7766225e3fd2d062198f59afa43f2/src/Counter.sol"
+    },
+    "Fund": {
+        "address": "0x8A353894A08Af108beDF15c9Ea2cE3A381ffE168",
+        "source_code": "https://github.com/subspace/subspace-evm-contracts/blob/b21233a675b7766225e3fd2d062198f59afa43f2/src/Fund.sol"
+    },
+    "Load": {
+        "address": "0x0b451Ed67bB203f998c69d66f2Cd32f89E452bc9",
+        "source_code": "https://github.com/subspace/subspace-evm-contracts/blob/b21233a675b7766225e3fd2d062198f59afa43f2/src/Load.sol"
+    },
+    "Multicall": {
+        "address": "0x8A353894A08Af108beDF15c9Ea2cE3A381ffE168",
+        "source_code": "https://github.com/subspace/subspace-evm-contracts/blob/b21233a675b7766225e3fd2d062198f59afa43f2/src/Multicall.sol"
+    },
+    "Pairing": {
+        "address": "0x27bB264F0F47c6B7C4dF66720e641D5Dd27Dd0c0",
+        "source_code": "https://github.com/semaphore-protocol/semaphore/blob/0f0df55615a7a3a4dc04d091c2210bf1e3a4ed0c/packages/contracts/contracts/base/Pairing.sol"
+    },
+    "SemaphoreVerifier": {
+        "address": "0xe0810A8d579A833736e60Dd4dE8Db6Dce2d5213e",
+        "source_code": "https://github.com/semaphore-protocol/semaphore/blob/0f0df55615a7a3a4dc04d091c2210bf1e3a4ed0c/packages/contracts/contracts/base/SemaphoreVerifier.sol"
+    },
+    "Poseidon": "0x75d67E637271F3e6ddefb0d1fa9E0B9B03562d2B",
+    "IncrementalBinaryTree": {
+        "address": "0x1B8B148CEb4375D1DF20EE84bD56503a02e405Dc",
+        "source_code": "https://mumbai.polygonscan.com/address/0x4621EE309EAc747425F0FEd51931dDC241A27F49#code"
+    },
+    "Semaphore": {
+        "address": "0x2f71e27Ab487583D79E20199c3b8633c71ef64b2",
+        "source_code": "https://github.com/semaphore-protocol/semaphore/blob/0f0df55615a7a3a4dc04d091c2210bf1e3a4ed0c/packages/contracts/contracts/Semaphore.sol"
+    },
+    "DidRegistry": {
+        "address": "0x1596BFd8023ED65C887Fffd35Fd9345776Ed4b22",
+        "source_code": "https://github.com/subspace/auto-contracts-hardhat/blob/efb9fcbdb6bd35a8272f094f8a3185daaaa2a19d/contracts/DidRegistry.sol"
+    }
+}

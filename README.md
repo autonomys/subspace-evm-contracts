@@ -1,6 +1,6 @@
 # Subspace EVM Contracts
 
-This repository contains the EVM Contracts deployed on Subspace Nova. This could perhaps be considered a one stop shop for all the contracts deployed on Subspace Nova.
+This repository contains the relevant EVM Contracts that are deployed on Subspace Nova. This could perhaps be considered as a one-stop shop for all the relevant contracts, libraries deployed on Subspace Nova.
 
 > Currently, the contracts are deployed on the `gemini-3g` Nova chain with chain ID `1002`.
 
