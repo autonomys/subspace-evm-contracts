@@ -104,7 +104,7 @@ contract SendersTreasury {
             sender: sender,
             receiver: msg.sender,
             amount: amount,
-            signature: abi.encodePacked(bytes32(0))
+            signature: ""
         });
         receiversRequestIds[msg.sender].push(currentRequestPayId);
         sendersRequestIds[sender].push(currentRequestPayId);

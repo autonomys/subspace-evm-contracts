@@ -116,8 +116,8 @@ contract SendersTreasuryTest is Test {
 
         vm.prank(alice);
         vm.expectRevert(SendersTreasury.ZeroSignature.selector);
-        // FIXME: parse a zero bytes.
-        sendersTreasury.signPayReq{value: 10}(id, abi.encodePacked(bytes32(0)));
+        // parse a zero bytes signature
+        sendersTreasury.signPayReq{value: 10}(id, "");
     }
 
     // TODO: Add more tests
