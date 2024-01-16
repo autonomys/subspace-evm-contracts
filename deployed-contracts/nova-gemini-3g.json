@@ -35,5 +35,9 @@
     "DidRegistry": {
         "address": "0x1596BFd8023ED65C887Fffd35Fd9345776Ed4b22",
         "source_code": "https://github.com/subspace/auto-contracts-hardhat/blob/efb9fcbdb6bd35a8272f094f8a3185daaaa2a19d/contracts/DidRegistry.sol"
+    },
+    "SendersTreasury": {
+        "address": "0x7A363EF616bdd60cF3E6B760F0a5672b77c5d9f2",
+        "source_code": "https://github.com/subspace/subspace-evm-contracts/blob/94507a3e967600f77d76b1b884de81fdd34ea816/src/SendersTreasury.sol"
     }
 }

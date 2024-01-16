@@ -8,13 +8,13 @@ Listed down are some commonly used commands for the CLI other than build, deploy
 ## Get balance
 
 ```sh
-$ cast balance $DEPLOYER_PUBLIC_KEY --rpc-url $SUBSPACE_EVM_RPC_URL
+cast balance $DEPLOYER_PUBLIC_KEY --rpc-url $NOVA_RPC_URL
 ```
 
 ## Get nonce
 
 ```sh
-$ cast nonce $DEPLOYER_PUBLIC_KEY --rpc-url $SUBSPACE_EVM_RPC_URL
+cast nonce $DEPLOYER_PUBLIC_KEY --rpc-url $NOVA_RPC_URL
 ```
 
 ## Send transaction
@@ -22,13 +22,13 @@ $ cast nonce $DEPLOYER_PUBLIC_KEY --rpc-url $SUBSPACE_EVM_RPC_URL
 Calling setter function of deployed Load contract:
 
 ```sh
-$ cast send $LOAD "setArray(uint256)" 1200 --private-key $DEPLOYER_PRIVATE_KEY --rpc-url $SUBSPACE_EVM_RPC_URL
+cast send $LOAD "setArray(uint256)" 1200 --private-key $DEPLOYER_PRIVATE_KEY --rpc-url $NOVA_RPC_URL
 ```
 
 ## Get contract state
 
 ```sh
-$ cast call $COUNTER "number()" --rpc-url $SUBSPACE_EVM_RPC_URL
+$ cast call $COUNTER "number()" --rpc-url $NOVA_RPC_URL
 0x00000000000000000000000000000000000000000000000000000000000038eb
 ```
 
