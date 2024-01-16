@@ -120,11 +120,38 @@ contract SendersTreasuryTest is Test {
         sendersTreasury.signPayReq{value: 10}(id, "");
     }
 
-    function test_SenderSignPayRequestFailWWrongReqId() public {}
+    function test_SenderSignPayRequestFailWWrongReqId() public {
+        uint256 id = sendersTreasury.requestPayId();
+        vm.prank(charlie);
+        sendersTreasury.requestPayment(alice, 10);
+
+        // get the list of request ids
+        uint256[] memory aliceIds = sendersTreasury.getSenderPaymentIdsOf(alice);
+        assertEq(aliceIds.length, 1, "alice must have got 1 pay request by now");
+
+        // construct message
+        bytes32 message = keccak256(
+            abi.encodePacked(
+                "\x19Auto Request Payments:\n32",
+                keccak256(abi.encodePacked(alice, charlie, uint256(10), aliceIds[0], address(sendersTreasury)))
+            )
+        );
+        // construct the signature by alice
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(aliceSKey, message);
+        vm.prank(alice);
+        console2.log(alice);
+        vm.expectRevert(abi.encodeWithSignature("InvalidRequestId(uint256)", id + 1));
+        console2.log(alice);
+        sendersTreasury.signPayReq{value: 10}(id + 1, abi.encodePacked(v, r, s));
+    }
+
     function test_SenderSignPayRequestFailWhenWrongSender() public {}
     function test_SenderSignPayRequestFailWhenInsufficientBal() public {}
 
     // ===== claimPayment =====
+
+    function test_ClaimPay() public {}
+    function test_ClaimPayFail() public {}
 
     // TODO: Add more tests
 }

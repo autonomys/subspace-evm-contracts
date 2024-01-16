@@ -15,6 +15,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.23;
 
+import {console2} from "forge-std/Test.sol";
+
 contract SendersTreasury {
     /// ===== State Variables =====
     mapping(address => uint256) public balances;
@@ -25,6 +27,7 @@ contract SendersTreasury {
     // mapping(bytes32 => bool) signatures;
 
     enum PayRequestCode {
+        UNSET, // NOT set
         REQUESTED, // requested payment by receiver
         SIGNED, // signed request by sender
         PAID // paid to the receiver
@@ -127,9 +130,14 @@ contract SendersTreasury {
 
         // ensure requestId must have the status code as REQUESTED
         PayRequest storage payRequest = payRequests[requestId];
+        console2.log("payrequest status code", uint256(payRequest.statusCode));
+        console2.log("requested status code", uint256(PayRequestCode.REQUESTED));
         if (payRequest.statusCode != PayRequestCode.REQUESTED) {
             revert InvalidRequestId(requestId);
         }
+
+        console2.log("payrequest sender", payRequest.sender);
+        console2.log("msg.sender", msg.sender);
 
         // ensure that the caller is the sender
         if (payRequest.sender != msg.sender) {
