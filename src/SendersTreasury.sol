@@ -15,8 +15,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.23;
 
-import {console2} from "forge-std/Test.sol";
-
 contract SendersTreasury {
     /// ===== State Variables =====
     mapping(address => uint256) public balances;
@@ -46,6 +44,8 @@ contract SendersTreasury {
     mapping(uint256 => PayRequest) private payRequests;
     uint256 public requestPayId = 1;
 
+    /* FIXME: See if we could shrink to 1 mapping. Reason: why to store an id into 2 places for sender & receiver.
+    Any way, we have both info packed into single struct. */
     // TODO: Remove this later when getting the event logs has no discrepancies. Now, it sometimes fails.
     mapping(address => uint256[]) private receiversRequestIds;
     // TODO: Remove this later when getting the event logs has no discrepancies. Now, it sometimes fails.
@@ -62,7 +62,7 @@ contract SendersTreasury {
     error ZeroAmount();
 
     /// ===== Events =====
-    event Deposit(address indexed sender, uint256 amount);
+    // event Deposit(address indexed sender, uint256 amount);
     event PaymentRequested(
         address indexed receiver, uint256 indexed requestPayId, address indexed sender, uint256 amount
     );
@@ -85,7 +85,7 @@ contract SendersTreasury {
     /// @param amount The amount of TSSC to request
     function requestPayment(address sender, uint256 amount) external {
         // TODO: enable this code when `deposit` is enabled i.e. when cloud handling is integrated.
-        // FIXME: check for sufficient balance of sender
+        // check for sufficient balance of sender
         // uint256 senderBalance = getBalanceOf(msg.sender);
         // if (balances[sender] < amount) {
         //     revert InsufficientBalanceOf(sender);
@@ -119,13 +119,13 @@ contract SendersTreasury {
     /// As of now, in sender's screen, list the requests that are in REQUESTED status and are pending to sign.
     function signPayReq(uint256 requestId, bytes memory signature) external payable {
         // ensure requestId must have the status code as REQUESTED
-        PayRequest storage payRequest = payRequests[requestId];
-        if (requestId == 0 || payRequest.statusCode != PayRequestCode.REQUESTED) {
+        PayRequest storage pr = payRequests[requestId];
+        if (requestId == 0 || pr.statusCode != PayRequestCode.REQUESTED) {
             revert InvalidRequestId(requestId);
         }
 
         // ensure that the caller is the sender
-        if (payRequest.sender != msg.sender) {
+        if (pr.sender != msg.sender) {
             revert CallerIsNotSender();
         }
 
@@ -136,11 +136,12 @@ contract SendersTreasury {
 
         // ensure the TSSC transferred is ≥ amount to requestId
         uint256 senderBalance = getBalanceOf(msg.sender);
-        if (senderBalance + msg.value < payRequest.amount) {
+        if (senderBalance + msg.value < pr.amount) {
             revert InsufficientBalanceOf(msg.sender);
         }
         balances[msg.sender] += msg.value;
 
+        payRequests[requestId].statusCode = PayRequestCode.SIGNED;
         payRequests[requestId].signature = signature;
 
         emit PayRequestSigned(msg.sender, requestId);
@@ -153,6 +154,10 @@ contract SendersTreasury {
     // function claimPayment(address sender, uint256 amount /* , bytes memory signature */ ) external {
     function claimPayment(uint256 requestId) external {
         PayRequest storage pr = payRequests[requestId];
+        if (requestId == 0 || pr.statusCode != PayRequestCode.SIGNED) {
+            revert InvalidRequestId(requestId);
+        }
+
         uint256 senderBalance = getBalanceOf(pr.sender);
         uint256 amount = pr.amount;
         address sender = pr.sender;
@@ -182,6 +187,23 @@ contract SendersTreasury {
             revert("claimPayment: Failed to send TSSC");
         }
         emit PaymentDone(requestId, sender, msg.sender, amount);
+    }
+
+    /// @notice sender can withdraw deposited fund at any time.
+    function withdraw(uint256 amount) external {
+        uint256 senderBalance = balances[msg.sender];
+
+        if (senderBalance < amount) {
+            revert InsufficientBalanceOf(msg.sender);
+        }
+
+        // update the sender's balance
+        balances[msg.sender] = senderBalance - amount;
+
+        (bool sent,) = payable(msg.sender).call{value: amount}("");
+        if (!sent) {
+            revert("Failed to withdraw TSSC");
+        }
     }
 
     // ========== Signature Methods ==========
