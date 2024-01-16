@@ -73,18 +73,13 @@ contract SendersTreasuryTest is Test {
         assertEq(aliceIds.length, 1, "alice must have got 1 pay request by now");
 
         // construct message
-        bytes32 message = keccak256(
-            abi.encodePacked(
-                "\x19Auto Request Payments:\n32",
-                keccak256(abi.encodePacked(alice, charlie, uint256(10), aliceIds[0], address(sendersTreasury)))
-            )
-        );
+        bytes32 message = sendersTreasury.constructMessageOf(id);
         // construct the signature by alice
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(aliceSKey, message);
         vm.prank(alice);
         vm.expectEmit(true, true, false, true, address(sendersTreasury));
         emit PayRequestSigned(alice, id);
-        sendersTreasury.signPayReq{value: 10}(id, abi.encodePacked(v, r, s));
+        sendersTreasury.signPayReq{value: 10}(id, abi.encodePacked(r, s, v));
     }
 
     function test_SenderSignPayRequestFailWZeroReqId() public {
@@ -96,28 +91,12 @@ contract SendersTreasuryTest is Test {
         assertEq(aliceIds.length, 1, "alice must have got 1 pay request by now");
 
         // construct message
-        bytes32 message = keccak256(
-            abi.encodePacked(
-                "\x19Auto Request Payments:\n32",
-                keccak256(abi.encodePacked(alice, charlie, uint256(10), aliceIds[0], address(sendersTreasury)))
-            )
-        );
+        bytes32 message = sendersTreasury.constructMessageOf(1);
         // construct the signature by alice
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(aliceSKey, message);
         vm.prank(alice);
-        vm.expectRevert(SendersTreasury.ZeroRequestId.selector);
-        sendersTreasury.signPayReq{value: 10}(0, abi.encodePacked(v, r, s));
-    }
-
-    function test_SenderSignPayRequestFailWZeroSig() public {
-        uint256 id = sendersTreasury.requestPayId();
-        vm.prank(charlie);
-        sendersTreasury.requestPayment(alice, 10);
-
-        vm.prank(alice);
-        vm.expectRevert(SendersTreasury.ZeroSignature.selector);
-        // parse a zero bytes signature
-        sendersTreasury.signPayReq{value: 10}(id, "");
+        vm.expectRevert(abi.encodeWithSignature("InvalidRequestId(uint256)", 0));
+        sendersTreasury.signPayReq{value: 10}(0, abi.encodePacked(r, s, v));
     }
 
     function test_SenderSignPayRequestFailWWrongReqId() public {
@@ -130,28 +109,79 @@ contract SendersTreasuryTest is Test {
         assertEq(aliceIds.length, 1, "alice must have got 1 pay request by now");
 
         // construct message
-        bytes32 message = keccak256(
-            abi.encodePacked(
-                "\x19Auto Request Payments:\n32",
-                keccak256(abi.encodePacked(alice, charlie, uint256(10), aliceIds[0], address(sendersTreasury)))
-            )
-        );
+        bytes32 message = sendersTreasury.constructMessageOf(id);
         // construct the signature by alice
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(aliceSKey, message);
         vm.prank(alice);
-        console2.log(alice);
         vm.expectRevert(abi.encodeWithSignature("InvalidRequestId(uint256)", id + 1));
-        console2.log(alice);
-        sendersTreasury.signPayReq{value: 10}(id + 1, abi.encodePacked(v, r, s));
+        sendersTreasury.signPayReq{value: 10}(id + 1, abi.encodePacked(r, s, v));
     }
 
-    function test_SenderSignPayRequestFailWhenWrongSender() public {}
-    function test_SenderSignPayRequestFailWhenInsufficientBal() public {}
+    function test_SenderSignPayRequestFailWZeroSig() public {
+        uint256 id = sendersTreasury.requestPayId();
+        vm.prank(charlie);
+        sendersTreasury.requestPayment(alice, 10);
+
+        vm.prank(alice);
+        vm.expectRevert(SendersTreasury.InvalidSignature.selector);
+        // parse a zero bytes signature
+        sendersTreasury.signPayReq{value: 10}(id, "");
+    }
+
+    function test_SenderSignPayRequestFailWInvalidSig() public {
+        uint256 id = sendersTreasury.requestPayId();
+        vm.prank(charlie);
+        sendersTreasury.requestPayment(alice, 10);
+
+        // construct message
+        bytes32 message = sendersTreasury.constructMessageOf(id);
+        // construct the signature by bob
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(bobSKey, message);
+        vm.prank(alice);
+        vm.expectRevert(SendersTreasury.InvalidSignature.selector);
+        // parse a zero bytes signature
+        sendersTreasury.signPayReq{value: 10}(id, abi.encodePacked(r, s, v));
+    }
+
+    function test_SenderSignPayRequestFailWhenWrongSender() public {
+        uint256 id = sendersTreasury.requestPayId();
+        vm.prank(charlie);
+        sendersTreasury.requestPayment(alice, 10);
+
+        // get the list of request ids
+        uint256[] memory aliceIds = sendersTreasury.getSenderPaymentIdsOf(alice);
+        assertEq(aliceIds.length, 1, "alice must have got 1 pay request by now");
+
+        // construct message
+        bytes32 message = sendersTreasury.constructMessageOf(id);
+        // construct the signature by alice
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(aliceSKey, message);
+        vm.prank(bob);
+        vm.expectRevert(SendersTreasury.CallerIsNotSender.selector);
+        sendersTreasury.signPayReq{value: 10}(id, abi.encodePacked(r, s, v));
+    }
+
+    function test_SenderSignPayRequestFailWhenInsufficientBal() public {
+        uint256 id = sendersTreasury.requestPayId();
+        vm.prank(charlie);
+        sendersTreasury.requestPayment(alice, 10);
+
+        // get the list of request ids
+        uint256[] memory aliceIds = sendersTreasury.getSenderPaymentIdsOf(alice);
+        assertEq(aliceIds.length, 1, "alice must have got 1 pay request by now");
+
+        // construct message
+        bytes32 message = sendersTreasury.constructMessageOf(id);
+        // construct the signature by alice
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(aliceSKey, message);
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSignature("InsufficientBalanceOf(address)", alice));
+        sendersTreasury.signPayReq{value: 2}(id, abi.encodePacked(r, s, v));
+    }
 
     // ===== claimPayment =====
 
-    function test_ClaimPay() public {}
-    function test_ClaimPayFail() public {}
-
     // TODO: Add more tests
+    // function test_ClaimPay() public {}
+    // function test_ClaimPayFail() public {}
 }

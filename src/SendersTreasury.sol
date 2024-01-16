@@ -60,8 +60,6 @@ contract SendersTreasury {
     error CallerIsNotReceiver();
     error ZeroAddress();
     error ZeroAmount();
-    error ZeroRequestId();
-    error ZeroSignature();
 
     /// ===== Events =====
     event Deposit(address indexed sender, uint256 amount);
@@ -120,28 +118,20 @@ contract SendersTreasury {
     /// NOTE: Here, the sender also transfers the token corresponding to requested pay.
     /// As of now, in sender's screen, list the requests that are in REQUESTED status and are pending to sign.
     function signPayReq(uint256 requestId, bytes memory signature) external payable {
-        if (requestId == 0) {
-            revert ZeroRequestId();
-        }
-
-        if (signature.length == 0) {
-            revert ZeroSignature();
-        }
-
         // ensure requestId must have the status code as REQUESTED
         PayRequest storage payRequest = payRequests[requestId];
-        console2.log("payrequest status code", uint256(payRequest.statusCode));
-        console2.log("requested status code", uint256(PayRequestCode.REQUESTED));
-        if (payRequest.statusCode != PayRequestCode.REQUESTED) {
+        if (requestId == 0 || payRequest.statusCode != PayRequestCode.REQUESTED) {
             revert InvalidRequestId(requestId);
         }
-
-        console2.log("payrequest sender", payRequest.sender);
-        console2.log("msg.sender", msg.sender);
 
         // ensure that the caller is the sender
         if (payRequest.sender != msg.sender) {
             revert CallerIsNotSender();
+        }
+
+        // ensure the parsed signature belongs to the caller
+        if (signature.length == 0 || verifySignature(signature, requestId, msg.sender)) {
+            revert InvalidSignature();
         }
 
         // ensure the TSSC transferred is ≥ amount to requestId
@@ -162,38 +152,36 @@ contract SendersTreasury {
     /// As of now, in receiver's screen, list the requests that are in SIGNED status and are pending for claim.
     // function claimPayment(address sender, uint256 amount /* , bytes memory signature */ ) external {
     function claimPayment(uint256 requestId) external {
-        PayRequest memory payRequest = payRequests[requestId];
-        uint256 senderBalance = getBalanceOf(payRequest.sender);
-        if (senderBalance < payRequest.amount) {
-            revert InsufficientBalanceOf(payRequest.sender);
+        PayRequest storage pr = payRequests[requestId];
+        uint256 senderBalance = getBalanceOf(pr.sender);
+        uint256 amount = pr.amount;
+        address sender = pr.sender;
+        if (senderBalance < amount) {
+            revert InsufficientBalanceOf(sender);
         }
 
         // ensure the caller is receiver
-        if (payRequest.receiver != msg.sender) {
+        if (pr.receiver != msg.sender) {
             revert CallerIsNotReceiver();
         }
 
-        // Construct the message
-        bytes32 message = prefixed(
-            keccak256(abi.encodePacked(payRequest.sender, msg.sender, payRequest.amount, requestId, address(this)))
-        );
-
-        // Recover the signer from the signature
-        address recoveredAddress = recoverSigner(message, payRequest.signature);
-
-        // Verify that the recovered address is the same as the sender
-        if (recoveredAddress != payRequest.sender) {
+        // CLEANUP: remove later
+        // ensure the signature is valid [REDUNDANT as already done in `signPayReq`]
+        if (verifySignature(pr.signature, requestId, sender)) {
             revert InvalidSignature();
         }
 
-        // Update balance and nonce
-        balances[payRequest.sender] = senderBalance - payRequest.amount;
+        // update the status of pay request id
+        pr.statusCode = PayRequestCode.PAID;
 
-        (bool sent,) = payable(msg.sender).call{value: payRequest.amount}("");
+        // Update balance and nonce
+        balances[sender] = senderBalance - amount;
+
+        (bool sent,) = payable(msg.sender).call{value: amount}("");
         if (!sent) {
             revert("claimPayment: Failed to send TSSC");
         }
-        emit PaymentDone(requestId, payRequest.sender, msg.sender, payRequest.amount);
+        emit PaymentDone(requestId, sender, msg.sender, amount);
     }
 
     // ========== Signature Methods ==========
@@ -222,6 +210,32 @@ contract SendersTreasury {
     // builds a prefixed hash to mimic the behavior of eth_sign.
     function prefixed(bytes32 hash) private pure returns (bytes32) {
         return keccak256(abi.encodePacked("\x19Auto Request Payments:\n32", hash));
+    }
+
+    function constructMessageOf(uint256 requestId) public view returns (bytes32 message) {
+        PayRequest memory pr = payRequests[requestId];
+
+        message = keccak256(
+            abi.encodePacked(
+                "\x19Auto Request Payments:\n32",
+                keccak256(abi.encodePacked(pr.sender, pr.receiver, pr.amount, requestId, address(this)))
+            )
+        );
+    }
+
+    function verifySignature(bytes memory signature, uint256 requestId, address callerSender)
+        public
+        view
+        returns (bool)
+    {
+        // construct message
+        bytes32 message = constructMessageOf(requestId);
+
+        // Recover the signer from the signature
+        address recoveredAddress = recoverSigner(message, signature);
+
+        // Verify that the recovered address is the same as the sender
+        return recoveredAddress != callerSender;
     }
 
     /// ========== Getter Functions ==========
