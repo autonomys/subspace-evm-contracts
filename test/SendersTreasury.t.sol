@@ -69,7 +69,7 @@ contract SendersTreasuryTest is Test {
         sendersTreasury.requestPayment(alice, 10);
 
         // get the list of request ids
-        uint256[] memory aliceIds = sendersTreasury.getSenderPaymentIdsOf(alice);
+        uint256[] memory aliceIds = sendersTreasury.getRequestedPayIdsOf(alice);
         assertEq(aliceIds.length, 1, "alice must have got 1 pay request by now");
 
         // construct message
@@ -87,7 +87,7 @@ contract SendersTreasuryTest is Test {
         sendersTreasury.requestPayment(alice, 10);
 
         // get the list of request ids
-        uint256[] memory aliceIds = sendersTreasury.getSenderPaymentIdsOf(alice);
+        uint256[] memory aliceIds = sendersTreasury.getRequestedPayIdsOf(alice);
         assertEq(aliceIds.length, 1, "alice must have got 1 pay request by now");
 
         // construct message
@@ -105,7 +105,7 @@ contract SendersTreasuryTest is Test {
         sendersTreasury.requestPayment(alice, 10);
 
         // get the list of request ids
-        uint256[] memory aliceIds = sendersTreasury.getSenderPaymentIdsOf(alice);
+        uint256[] memory aliceIds = sendersTreasury.getRequestedPayIdsOf(alice);
         assertEq(aliceIds.length, 1, "alice must have got 1 pay request by now");
 
         // construct message
@@ -149,7 +149,7 @@ contract SendersTreasuryTest is Test {
         sendersTreasury.requestPayment(alice, 10);
 
         // get the list of request ids
-        uint256[] memory aliceIds = sendersTreasury.getSenderPaymentIdsOf(alice);
+        uint256[] memory aliceIds = sendersTreasury.getRequestedPayIdsOf(alice);
         assertEq(aliceIds.length, 1, "alice must have got 1 pay request by now");
 
         // construct message
@@ -167,7 +167,7 @@ contract SendersTreasuryTest is Test {
         sendersTreasury.requestPayment(alice, 10);
 
         // get the list of request ids
-        uint256[] memory aliceIds = sendersTreasury.getSenderPaymentIdsOf(alice);
+        uint256[] memory aliceIds = sendersTreasury.getRequestedPayIdsOf(alice);
         assertEq(aliceIds.length, 1, "alice must have got 1 pay request by now");
 
         // construct message
@@ -186,7 +186,7 @@ contract SendersTreasuryTest is Test {
         sendersTreasury.requestPayment(alice, 10);
 
         // get the list of request ids
-        uint256[] memory aliceIds = sendersTreasury.getSenderPaymentIdsOf(alice);
+        uint256[] memory aliceIds = sendersTreasury.getRequestedPayIdsOf(alice);
         assertEq(aliceIds.length, 1, "alice must have got 1 pay request by now");
 
         // construct message
@@ -207,7 +207,7 @@ contract SendersTreasuryTest is Test {
         sendersTreasury.requestPayment(alice, 10);
 
         // get the list of request ids
-        uint256[] memory aliceIds = sendersTreasury.getSenderPaymentIdsOf(alice);
+        uint256[] memory aliceIds = sendersTreasury.getRequestedPayIdsOf(alice);
         assertEq(aliceIds.length, 1, "alice must have got 1 pay request by now");
 
         // construct message

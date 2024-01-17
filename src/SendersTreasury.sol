@@ -47,9 +47,7 @@ contract SendersTreasury {
     /* FIXME: See if we could shrink to 1 mapping. Reason: why to store an id into 2 places for sender & receiver.
     Any way, we have both info packed into single struct. */
     // TODO: Remove this later when getting the event logs has no discrepancies. Now, it sometimes fails.
-    mapping(address => uint256[]) private receiversRequestIds;
-    // TODO: Remove this later when getting the event logs has no discrepancies. Now, it sometimes fails.
-    mapping(address => uint256[]) private sendersRequestIds;
+    mapping(address => uint256[]) private usersRequestIds;
 
     /// ===== Errors =====
     error InsufficientBalanceOf(address);
@@ -107,8 +105,8 @@ contract SendersTreasury {
             amount: amount,
             signature: ""
         });
-        receiversRequestIds[msg.sender].push(currentRequestPayId);
-        sendersRequestIds[sender].push(currentRequestPayId);
+        usersRequestIds[msg.sender].push(currentRequestPayId);
+        usersRequestIds[sender].push(currentRequestPayId);
         ++requestPayId;
 
         emit PaymentRequested(msg.sender, currentRequestPayId, sender, amount);
@@ -276,14 +274,9 @@ contract SendersTreasury {
         return (payRequest.statusCode, payRequest.sender, payRequest.receiver, payRequest.amount);
     }
 
-    /// @dev Get the payment request Ids of a sender
-    function getSenderPaymentIdsOf(address sender) external view returns (uint256[] memory) {
-        return sendersRequestIds[sender];
-    }
-
-    /// @dev Get the payment request Ids of a receiver
-    function getReceiverPaymentIdsOf(address receiver) external view returns (uint256[] memory) {
-        return receiversRequestIds[receiver];
+    /// @dev Get the payment request Ids of a user (sender/receiver..all)
+    function getRequestedPayIdsOf(address user) external view returns (uint256[] memory) {
+        return usersRequestIds[user];
     }
 
     function getBalanceOf(address sender) public view returns (uint256) {
