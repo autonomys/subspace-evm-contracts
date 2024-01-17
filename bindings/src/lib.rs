@@ -5,5 +5,9 @@
 //! These files may be overwritten by the codegen system at any time.
 pub mod counter;
 pub mod fund;
+pub mod ierc721_token_receiver;
 pub mod load;
+pub mod mock_erc20;
+pub mod mock_erc721;
 pub mod multicall_3;
+pub mod senders_treasury;

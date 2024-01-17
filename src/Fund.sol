@@ -26,7 +26,7 @@ contract Fund {
         }
 
         // transfer amount
-        (bool sent, bytes memory data) = _to.call{value: _amount}("");
+        (bool sent,) = _to.call{value: _amount}("");
         require(sent, "Failed to send Ether");
 
         emit Transfer(msg.sender, _to, _amount);

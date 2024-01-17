@@ -15,6 +15,7 @@ docs/
 
 broadcast/
 
-lib/
-
 target/
+
+.DS_Store
+.vscode/

@@ -1,5 +1,5 @@
 [package]
-name = "subspace-evm-bindings"
+name = "nova-rs-bindings"
 version = "0.1.0"
 edition = "2021"
 

@@ -6,7 +6,7 @@ import {Load} from "../src/Load.sol";
 
 /* 
     $ source .env
-    $ forge script script/Load.s.sol:LoadContractScript --rpc-url $SUBSPACE_EVM_RPC_URL --private-key $DEPLOYER_PRIVATE_KEY --broadcast --verify --verifier blockscout --verifier-url $VERIFIER_URL
+    $ forge script script/Load.s.sol:LoadContractScript --rpc-url $NOVA_RPC_URL --private-key $DEPLOYER_PRIVATE_KEY --broadcast --verify --verifier blockscout --verifier-url $VERIFIER_URL
 */
 
 contract LoadScript is Script {
