@@ -24,3 +24,4 @@ target/
 .deps/
 .deploys/
 compiler_config.json
+*/artifacts/*
