@@ -6,8 +6,8 @@ import {WTsscLz} from "../src/WTsscLz.sol";
 
 /* 
     $ source .env
-    $ forge script script/WTsscLz.s.sol:WTsscLzScript --r $NOVA_RPC_URL --private-key $DEPLOYER_PRIVATE_KEY --broadcast --verify --verifier blockscout --verifier-url $VERIFIER_URL
-
+    Nova: $ forge script script/WTsscLz.s.sol:WTsscLzScript --rpc-url $NOVA_RPC_URL --private-key $DEPLOYER_PRIVATE_KEY --broadcast --verify --verifier blockscout --verifier-url $NOVA_VERIFIER_URL
+    Sepolia: $ forge script script/WTsscLz.s.sol:WTsscLzScript --rpc-url $SEPOLIA_RPC_URL --private-key $DEPLOYER_PRIVATE_KEY --broadcast --verify --verifier blockscout --verifier-url $ETHSEPOLIA_VERIFIER_URL
     // set peers for Sepolia contract
     $ cast send $MY_LZ_TOKEN_SEPOLIA "setPeer(uint32,bytes32)" $MUMBAI_ENDPOINT_V2_ID $(cast --to-bytes32 $MY_LZ_TOKEN_MUMBAI) --private-key $DEPLOYER_PRIVATE_KEY -r $SEPOLIA_RPC_URL
     // set peers for Mumbai contract
@@ -23,11 +23,11 @@ import {WTsscLz} from "../src/WTsscLz.sol";
 */
 contract WTsscLzScript is Script {
     // Provide Endpoint networks where this contract is to be deployed
-    address private epContract = vm.envAddress("NOVA_ENDPOINT_V2");
-    // address private epContract = vm.envAddress("SEPOLIA_ENDPOINT_V2");
+    // address epContract = vm.envAddress("NOVA_ENDPOINT_V2");
+    address private epContract = vm.envAddress("SEPOLIA_ENDPOINT_V2");
     // address private epContract = vm.envAddress("MUMBAI_ENDPOINT_V2");
 
-    address private delegate;
+    address delegate;
 
     function setUp() public {
         uint256 privateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
