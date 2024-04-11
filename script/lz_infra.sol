@@ -13,10 +13,12 @@ import {Executor} from "@layerzerolabs/messagelib/contracts/Executor.sol";
 import {ExecutorFeeLib} from "@layerzerolabs/messagelib/contracts/ExecutorFeeLib.sol";
 import {SendUln301} from "@layerzerolabs/messagelib/contracts/uln/uln301/SendUln301.sol";
 import {ReceiveUln301} from "@layerzerolabs/messagelib/contracts/uln/uln301/ReceiveUln301.sol";
+import {Treasury} from "@layerzerolabs/messagelib/contracts/Treasury.sol";
 import {TreasuryFeeHandler} from "@layerzerolabs/messagelib/contracts/uln/uln301/TreasuryFeeHandler.sol";
 import {NonceContractMock as NonceContract} from
     "@layerzerolabs/messagelib/contracts/uln/uln301/mocks/NonceContractMock.sol";
 import {EndpointV1} from "@layerzerolabs/messagelib/test/mocks/EndpointV1.sol";
+import {SimpleMessageLib} from "@layerzerolabs/protocol/contracts/messagelib/SimpleMessageLib.sol";
 
 /* 
 
@@ -43,10 +45,12 @@ contract LzInfraScript is Script {
 
     address delegate;
 
+    SimpleMessageLib simpleMessageLib;
     EndpointV2 endpointV2;
     SendUln302 sendUln302;
     ReceiveUln302 receiveUln302;
     PriceFeed priceFeed;
+    Treasury treasury;
     TreasuryFeeHandler feeHandler;
 
     ReceiveUln301 receiveUln301;
@@ -74,6 +78,11 @@ contract LzInfraScript is Script {
         // TODO: verify treasuryGasCap, treasuryGasForFeeCap for Nova ??
         sendUln302 = new SendUln302(address(endpointV2), TREASURY_GAS_CAP, TREASURY_GAS_FOR_FEE_CAP);
         receiveUln302 = new ReceiveUln302(address(endpointV2));
+        // TODO: Add `receiveUln302::setDefaultUlnConfigs`
+
+        treasury = new Treasury();
+        simpleMessageLib = new SimpleMessageLib(address(endpointV2), address(treasury));
+        endpointV2.registerLibrary(address(simpleMessageLib));
 
         // Deploy for Executor
         EndpointV1 endpointV1 = new EndpointV1(uint16(EID));
@@ -121,6 +130,8 @@ contract LzInfraScript is Script {
             executor.initialize(address(endpointV2), address(receiveUln301), libs, address(priceFeed), delegate, admins);
             executor.setWorkerFeeLib(address(executorFeeLib));
         }
+
+        // TODO: Wire remote
 
         vm.stopBroadcast();
     }
