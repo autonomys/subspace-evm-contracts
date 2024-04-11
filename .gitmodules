@@ -4,9 +4,6 @@
 [submodule "lib/LayerZero-v2"]
 	path = lib/LayerZero-v2
 	url = https://github.com/abhi3700/LayerZero-v2
-[submodule "lib/openzeppelin"]
-	path = lib/openzeppelin
-	url = https://github.com/OpenZeppelin/openzeppelin-contracts.git
 [submodule "lib/solmate"]
 	path = lib/solmate
 	url = https://github.com/transmissions11/solmate

@@ -10,7 +10,10 @@ This repository contains the relevant EVM Contracts that are deployed on Subspac
 
 #### Build
 
+> Install bun from [here](https://bun.sh/docs/installation).
+
 ```sh
+bun install
 forge build
 ```
 

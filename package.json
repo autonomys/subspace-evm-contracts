@@ -1,0 +1,14 @@
+{
+    "name": "subspace-evm-contracts",
+    "description": "For Lz related contracts",
+    "packageManager": "yarn@4.1.1",
+    "dependencies": {
+        "@layerzerolabs/lz-evm-v1-0.7": "^2.0.1"
+    },
+    "devDependencies": {
+        "@openzeppelin/contracts": "^4.8.1",
+        "@openzeppelin/contracts-upgradeable": "^4.8.1",
+        "hardhat-deploy": "^0.11.44",
+        "solidity-bytes-utils": "^0.8.0"
+    }
+}

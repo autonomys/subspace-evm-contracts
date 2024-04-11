@@ -6,7 +6,7 @@ import {SendersTreasury} from "../src/SendersTreasury.sol";
 
 /* 
     $ source .env
-    $ forge script script/SendersTreasury.s.sol:SendersTreasuryScript --rpc-url $NOVA_RPC_URL --private-key $DEPLOYER_PRIVATE_KEY --broadcast --verify --verifier blockscout --verifier-url $VERIFIER_URL
+    $ forge script script/SendersTreasury.s.sol:SendersTreasuryScript --rpc-url $NOVA_RPC_URL --private-key $DEPLOYER_PRIVATE_KEY --broadcast --verify --verifier blockscout --verifier-url $NOVA_VERIFIER_URL
 */
 contract SendersTreasuryScript is Script {
     function setUp() public {}

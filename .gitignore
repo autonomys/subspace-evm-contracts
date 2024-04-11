@@ -25,3 +25,6 @@ target/
 .deploys/
 compiler_config.json
 */artifacts/*
+
+# node
+node_modules/
