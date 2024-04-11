@@ -18,7 +18,14 @@ import {NonceContractMock as NonceContract} from
     "@layerzerolabs/messagelib/contracts/uln/uln301/mocks/NonceContractMock.sol";
 import {EndpointV1} from "@layerzerolabs/messagelib/test/mocks/EndpointV1.sol";
 
-contract WTsscLzScript is Script {
+/* 
+
+For Anvil: `$ forge script ./script/lz_infra.sol:LzInfraScript --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --rpc-url http://127.0.0.1:8545 --broadcast`
+
+
+*/
+
+contract LzInfraScript is Script {
     // Provide Endpoint networks where this contract is to be deployed
     // address epContract = vm.envAddress("NOVA_ENDPOINT_V2");
     // address epContract = vm.envAddress("SEPOLIA_ENDPOINT_V2");
@@ -50,8 +57,11 @@ contract WTsscLzScript is Script {
     ExecutorFeeLib executorFeeLib;
 
     function setUp() public {
-        uint256 privateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
-        delegate = vm.addr(privateKey);
+        // uint256 privateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
+        // delegate = vm.addr(privateKey);
+
+        // For Anvil: `$ forge script ./script/lz_infra.sol:LzInfraScript --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --rpc-url http://127.0.0.1:8545 --broadcast`
+        delegate = address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266); // testing for Anvil
     }
 
     function run() public {
