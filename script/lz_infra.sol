@@ -74,15 +74,18 @@ contract LzInfraScript is Script {
         // Endpoint V2 for Nova
         endpointV2 = new EndpointV2(EID, delegate);
 
-        // Message Libs (Send, Receive) for Nova
+        // Message Libs (Simple, SendUln, ReceiveUln) for Nova
+        treasury = new Treasury();
+        simpleMessageLib = new SimpleMessageLib(address(endpointV2), address(treasury));
         // TODO: verify treasuryGasCap, treasuryGasForFeeCap for Nova ??
         sendUln302 = new SendUln302(address(endpointV2), TREASURY_GAS_CAP, TREASURY_GAS_FOR_FEE_CAP);
         receiveUln302 = new ReceiveUln302(address(endpointV2));
         // TODO: Add `receiveUln302::setDefaultUlnConfigs`
 
-        treasury = new Treasury();
-        simpleMessageLib = new SimpleMessageLib(address(endpointV2), address(treasury));
+        // register all 3 message libs. BlockedMessageLib is already registered during EP deployment.
         endpointV2.registerLibrary(address(simpleMessageLib));
+        endpointV2.registerLibrary(address(sendUln302));
+        endpointV2.registerLibrary(address(receiveUln302));
 
         // Deploy for Executor
         EndpointV1 endpointV1 = new EndpointV1(uint16(EID));
