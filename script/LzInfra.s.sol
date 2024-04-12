@@ -28,18 +28,24 @@ import {SetDefaultExecutorConfigParam, ExecutorConfig} from "@layerzerolabs/mess
 
 For Anvil: `$ forge script ./script/LzInfra.s.sol:LzInfraScript --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --rpc-url http://127.0.0.1:8545 --broadcast`
 For Nova: `$ forge script ./script/LzInfra.s.sol:LzInfraScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url ${NOVA_RPC_URL} --broadcast  --verify --verifier blockscout --verifier-url $NOVA_VERIFIER_URL`
+For Sepolia: `$ forge script ./script/LzInfra.s.sol:LzInfraScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url ${SEPOLIA_RPC_URL} --broadcast  --verify --verifier blockscout --verifier-url $ETHSEPOLIA_VERIFIER_URL`
 
+NOTE: For Nova & Sepolia to support cross-chain messages, you have to deploy the whole script flow on each chain, wiring up for each other.
 
 */
 
 contract LzInfraScript is Script {
-    // Provide Endpoint networks where this contract is to be deployed
-    // address epContract = vm.envAddress("NOVA_ENDPOINT_V2");
-    // address epContract = vm.envAddress("SEPOLIA_ENDPOINT_V2");
+    // Use the Endpoint networks where this contract is to be deployed
 
-    // Endpoint ID
-    uint32 private constant EID = 490_000; // for Nova
+    // Endpoint address, ids, when deploying on Nova
+    address endpointV2Address = vm.envAddress("NOVA_ENDPOINT_V2");
+    uint32 private constant LOCAL_EID = 490_000; // for Nova
     uint32 private constant REMOTE_EID = 40161; // for Sepolia
+
+    // Endpoint address, ids, when deploying on Sepolia
+    // address endpointV2Address = vm.envAddress("SEPOLIA_ENDPOINT_V2");
+    // uint32 private constant LOCAL_EID = 40161; // for Sepolia
+    // uint32 private constant REMOTE_EID = 490_000; // for Nova
 
     // SendUln302
     uint256 private constant TREASURY_GAS_CAP = 100_000;
@@ -67,20 +73,21 @@ contract LzInfraScript is Script {
     ExecutorFeeLib executorFeeLib;
 
     function setUp() public {
-        // uint256 privateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
-        // delegate = vm.addr(privateKey);
+        uint256 privateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
+        delegate = vm.addr(privateKey);
 
         // For Anvil: `$ forge script ./script/LzInfra.s.sol:LzInfraScript --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --rpc-url http://127.0.0.1:8545 --broadcast`
-        delegate = address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266); // testing for Anvil
+        // delegate = address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266); // testing for Anvil
     }
 
     function run() public {
         vm.startBroadcast();
 
-        treasury = new Treasury();
+        // treasury = new Treasury();
 
         // Endpoint V2 for Nova
-        endpointV2 = new EndpointV2(EID, delegate);
+        // CLEANUP: Remove when EP is deployed on Nova. Got error on 13-Apr-2024.
+        endpointV2 = new EndpointV2(LOCAL_EID, delegate);
 
         // Message Libs (Simple, SendUln, ReceiveUln) for Nova
         simpleMessageLib = new SimpleMessageLib(address(endpointV2), address(treasury));
@@ -95,17 +102,17 @@ contract LzInfraScript is Script {
         endpointV2.registerLibrary(address(receiveUln302));
 
         // Deploy for Executor
-        endpointV1 = new EndpointV1(uint16(EID));
+        endpointV1 = new EndpointV1(uint16(LOCAL_EID));
         feeHandler = new TreasuryFeeHandler(address(endpointV1));
         sendUln301 = new SendUln301(
             address(endpointV1),
             TREASURY_GAS_CAP,
             TREASURY_GAS_FOR_FEE_CAP,
             address(new NonceContract(address(endpointV1))),
-            EID,
+            LOCAL_EID,
             address(feeHandler)
         );
-        receiveUln301 = new ReceiveUln301(address(endpointV1), EID);
+        receiveUln301 = new ReceiveUln301(address(endpointV1), LOCAL_EID);
 
         // PriceFeed
         priceFeed = new PriceFeed();
@@ -120,7 +127,7 @@ contract LzInfraScript is Script {
         signers[0] = delegate;
         address[] memory admins = new address[](1);
         admins[0] = delegate;
-        dvn = new DVN(EID, libs, address(priceFeed), signers, 1, admins);
+        dvn = new DVN(LOCAL_EID, libs, address(priceFeed), signers, 1, admins);
         IDVN.DstConfigParam[] memory dvnDstConfigParams = new IDVN.DstConfigParam[](1);
         dvnDstConfigParams[0] =
             IDVN.DstConfigParam({dstEid: REMOTE_EID, gas: 5000, multiplierBps: 0, floorMarginUSD: 0}); // TODO: confirm gas... ??
