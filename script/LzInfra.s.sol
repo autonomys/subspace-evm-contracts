@@ -20,10 +20,14 @@ import {NonceContractMock as NonceContract} from
 import {EndpointV1} from "@layerzerolabs/messagelib/test/mocks/EndpointV1.sol";
 import {SimpleMessageLib} from "@layerzerolabs/protocol/contracts/messagelib/SimpleMessageLib.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {IExecutor} from "@layerzerolabs/messagelib/contracts/interfaces/IExecutor.sol";
+import {UlnConfig, SetDefaultUlnConfigParam} from "@layerzerolabs/messagelib/contracts/uln/UlnBase.sol";
+import {SetDefaultExecutorConfigParam, ExecutorConfig} from "@layerzerolabs/messagelib/contracts/SendLibBase.sol";
 
 /* 
 
-For Anvil: `$ forge script ./script/lz_infra.sol:LzInfraScript --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --rpc-url http://127.0.0.1:8545 --broadcast`
+For Anvil: `$ forge script ./script/LzInfra.s.sol:LzInfraScript --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --rpc-url http://127.0.0.1:8545 --broadcast`
+For Nova: `$ forge script ./script/LzInfra.s.sol:LzInfraScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url ${NOVA_RPC_URL} --broadcast  --verify --verifier blockscout --verifier-url $NOVA_VERIFIER_URL`
 
 
 */
@@ -33,7 +37,7 @@ contract LzInfraScript is Script {
     // address epContract = vm.envAddress("NOVA_ENDPOINT_V2");
     // address epContract = vm.envAddress("SEPOLIA_ENDPOINT_V2");
 
-    // Endpoint
+    // Endpoint ID
     uint32 private constant EID = 490_000; // for Nova
     uint32 private constant REMOTE_EID = 40161; // for Sepolia
 
@@ -54,10 +58,11 @@ contract LzInfraScript is Script {
     Treasury treasury;
     TreasuryFeeHandler feeHandler;
 
+    EndpointV1 endpointV1;
     ReceiveUln301 receiveUln301;
     SendUln301 sendUln301;
     DVN dvn;
-    DVNFeeLib feeLib;
+    DVNFeeLib dvnFeeLib;
     Executor executor;
     ExecutorFeeLib executorFeeLib;
 
@@ -65,7 +70,7 @@ contract LzInfraScript is Script {
         // uint256 privateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
         // delegate = vm.addr(privateKey);
 
-        // For Anvil: `$ forge script ./script/lz_infra.sol:LzInfraScript --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --rpc-url http://127.0.0.1:8545 --broadcast`
+        // For Anvil: `$ forge script ./script/LzInfra.s.sol:LzInfraScript --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --rpc-url http://127.0.0.1:8545 --broadcast`
         delegate = address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266); // testing for Anvil
     }
 
@@ -90,7 +95,7 @@ contract LzInfraScript is Script {
         endpointV2.registerLibrary(address(receiveUln302));
 
         // Deploy for Executor
-        EndpointV1 endpointV1 = new EndpointV1(uint16(EID));
+        endpointV1 = new EndpointV1(uint16(EID));
         feeHandler = new TreasuryFeeHandler(address(endpointV1));
         sendUln301 = new SendUln301(
             address(endpointV1),
@@ -116,10 +121,11 @@ contract LzInfraScript is Script {
         address[] memory admins = new address[](1);
         admins[0] = delegate;
         dvn = new DVN(EID, libs, address(priceFeed), signers, 1, admins);
-        IDVN.DstConfigParam[] memory dstConfigParams = new IDVN.DstConfigParam[](1);
-        dstConfigParams[0] = IDVN.DstConfigParam({dstEid: REMOTE_EID, gas: 5000, multiplierBps: 0, floorMarginUSD: 0}); // TODO: confirm gas... ??
-        dvn.setDstConfig(dstConfigParams);
-        DVNFeeLib dvnFeeLib = new DVNFeeLib(NATIVE_DECIMAL_RATE);
+        IDVN.DstConfigParam[] memory dvnDstConfigParams = new IDVN.DstConfigParam[](1);
+        dvnDstConfigParams[0] =
+            IDVN.DstConfigParam({dstEid: REMOTE_EID, gas: 5000, multiplierBps: 0, floorMarginUSD: 0}); // TODO: confirm gas... ??
+        dvn.setDstConfig(dvnDstConfigParams);
+        dvnFeeLib = new DVNFeeLib(NATIVE_DECIMAL_RATE);
         dvn.setWorkerFeeLib(address(dvnFeeLib));
         dvn.setDefaultMultiplierBps(100); // TODO: verify 100 ?
 
@@ -129,6 +135,7 @@ contract LzInfraScript is Script {
         {
             address[] memory libs2 = new address[](3);
             // FIXME: Issue raised: https://github.com/LayerZero-Labs/LayerZero-v2/issues/58
+            // Temporarily, have to support both the v1 for Executor. LzExecutor is for LZ Scan explorer.
             libs2[0] = address(sendUln301); // TODO: can be removed?
             // libs[1] = address(receiveUln301);
             libs2[1] = address(receiveUln302); // TODO: verify
@@ -137,10 +144,43 @@ contract LzInfraScript is Script {
             executor.setWorkerFeeLib(address(executorFeeLib));
         }
 
-        // TODO: Wire remote
+        // Wire remote
+        IExecutor.DstConfigParam[] memory executorDstConfigParams = new IExecutor.DstConfigParam[](1);
+        executorDstConfigParams[0] = IExecutor.DstConfigParam({
+            dstEid: REMOTE_EID,
+            baseGas: 5000,
+            multiplierBps: 10000,
+            floorMarginUSD: 1e10,
+            nativeCap: 1 gwei
+        });
+        executor.setDstConfig(executorDstConfigParams);
+
+        address[] memory dvns = new address[](1);
+        dvns[0] = address(dvn);
+        UlnConfig memory ulnConfig = UlnConfig(1, uint8(dvns.length), 0, 0, dvns, new address[](0));
+        SetDefaultUlnConfigParam[] memory ulnConfigParams = new SetDefaultUlnConfigParam[](1);
+        ulnConfigParams[0] = SetDefaultUlnConfigParam(REMOTE_EID, ulnConfig);
+
+        // set send uln config
+        SetDefaultExecutorConfigParam[] memory executorConfigParams = new SetDefaultExecutorConfigParam[](1);
+        executorConfigParams[0] = SetDefaultExecutorConfigParam(REMOTE_EID, ExecutorConfig(1000, address(executor)));
+        sendUln302.setDefaultExecutorConfigs(executorConfigParams);
+        sendUln302.setDefaultUlnConfigs(ulnConfigParams);
+
+        // set receive uln config
+        receiveUln302.setDefaultUlnConfigs(ulnConfigParams);
+
+        endpointV2.setDefaultSendLibrary(REMOTE_EID, address(sendUln302));
+        endpointV2.setDefaultReceiveLibrary(REMOTE_EID, address(receiveUln302), 0);
 
         // export contract, lib addresses so that it can be used in
         //      another script to get info like quotes; send txs.
+        exportAddresses();
+
+        vm.stopBroadcast();
+    }
+
+    function exportAddresses() internal {
         // Step 1: Convert addresses to hexadecimal strings
         string memory treasuryHex = Strings.toHexString(uint256(uint160(address(treasury))), 20);
         string memory simpleMessageLibHex = Strings.toHexString(uint256(uint160(address(simpleMessageLib))), 20);
@@ -158,24 +198,22 @@ contract LzInfraScript is Script {
         string memory dvnFeeLibHex = Strings.toHexString(uint256(uint160(address(dvnFeeLib))), 20);
 
         // Step 2: Concatenate strings iteratively or in smaller groups
-        string memory content = string(abi.encodePacked("Treasury: ", treasuryHex, "\n"));
-        content = string(abi.encodePacked(content, "SimpleMessageLib: ", simpleMessageLibHex, "\n"));
-        content = string(abi.encodePacked(content, "SendUln301: ", sendUln301Hex, "\n"));
-        content = string(abi.encodePacked(content, "SendUln302: ", sendUln302Hex, "\n"));
-        content = string(abi.encodePacked(content, "ReceiveUln301: ", receiveUln301Hex, "\n"));
-        content = string(abi.encodePacked(content, "ReceiveUln302: ", receiveUln302Hex, "\n"));
-        content = string(abi.encodePacked(content, "EndpointV1: ", endpointV1Hex, "\n"));
-        content = string(abi.encodePacked(content, "EndpointV2: ", endpointV2Hex, "\n"));
-        content = string(abi.encodePacked(content, "PriceFeed: ", priceFeedHex, "\n"));
-        content = string(abi.encodePacked(content, "Delegate/Admin(s): ", delegateHex, "\n"));
-        content = string(abi.encodePacked(content, "Executor: ", executorHex, "\n"));
-        content = string(abi.encodePacked(content, "ExecutorFeeLib: ", executorFeeLibHex, "\n"));
-        content = string(abi.encodePacked(content, "DVN: ", dvnHex, "\n"));
-        content = string(abi.encodePacked(content, "DVNFeeLib: ", dvnFeeLibHex));
+        string memory content = string(abi.encodePacked("Treasury=", treasuryHex, "\n"));
+        content = string(abi.encodePacked(content, "SimpleMessageLib=", simpleMessageLibHex, "\n"));
+        content = string(abi.encodePacked(content, "SendUln301=", sendUln301Hex, "\n"));
+        content = string(abi.encodePacked(content, "SendUln302=", sendUln302Hex, "\n"));
+        content = string(abi.encodePacked(content, "ReceiveUln301=", receiveUln301Hex, "\n"));
+        content = string(abi.encodePacked(content, "ReceiveUln302=", receiveUln302Hex, "\n"));
+        content = string(abi.encodePacked(content, "EndpointV1=", endpointV1Hex, "\n"));
+        content = string(abi.encodePacked(content, "EndpointV2=", endpointV2Hex, "\n"));
+        content = string(abi.encodePacked(content, "PriceFeed=", priceFeedHex, "\n"));
+        content = string(abi.encodePacked(content, "Delegate/Admin(s)=", delegateHex, "\n"));
+        content = string(abi.encodePacked(content, "Executor=", executorHex, "\n"));
+        content = string(abi.encodePacked(content, "ExecutorFeeLib=", executorFeeLibHex, "\n"));
+        content = string(abi.encodePacked(content, "DVN=", dvnHex, "\n"));
+        content = string(abi.encodePacked(content, "DVNFeeLib=", dvnFeeLibHex));
 
         vm.writeFile("lz_infra_addresses.txt", content);
-        console2.log("LZ Infra addresses written to \'lz_infra_addresses.txt\'");
-
-        vm.stopBroadcast();
+        console2.log("LZ Infra addresses written to 'lz_infra_addresses.txt'");
     }
 }
