@@ -19,6 +19,7 @@ import {NonceContractMock as NonceContract} from
     "@layerzerolabs/messagelib/contracts/uln/uln301/mocks/NonceContractMock.sol";
 import {EndpointV1} from "@layerzerolabs/messagelib/test/mocks/EndpointV1.sol";
 import {SimpleMessageLib} from "@layerzerolabs/protocol/contracts/messagelib/SimpleMessageLib.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 /* 
 
@@ -71,16 +72,17 @@ contract LzInfraScript is Script {
     function run() public {
         vm.startBroadcast();
 
-        // Message Libs (Simple, SendUln, ReceiveUln) for Nova
         treasury = new Treasury();
+
+        // Endpoint V2 for Nova
+        endpointV2 = new EndpointV2(EID, delegate);
+
+        // Message Libs (Simple, SendUln, ReceiveUln) for Nova
         simpleMessageLib = new SimpleMessageLib(address(endpointV2), address(treasury));
         // TODO: verify treasuryGasCap, treasuryGasForFeeCap for Nova ??
         sendUln302 = new SendUln302(address(endpointV2), TREASURY_GAS_CAP, TREASURY_GAS_FOR_FEE_CAP);
         receiveUln302 = new ReceiveUln302(address(endpointV2));
         // TODO: Add `receiveUln302::setDefaultUlnConfigs`
-
-        // Endpoint V2 for Nova
-        endpointV2 = new EndpointV2(EID, delegate);
 
         // register all 3 message libs. BlockedMessageLib is already registered during EP deployment.
         endpointV2.registerLibrary(address(simpleMessageLib));
@@ -139,20 +141,40 @@ contract LzInfraScript is Script {
 
         // export contract, lib addresses so that it can be used in
         //      another script to get info like quotes; send txs.
-        console2.log("=====Output variables:");
-        console2.log("Treasury: ", address(treasury));
-        console2.log("SimpleMessageLib: ", address(simpleMessageLib));
-        console2.log("SendUln301: ", address(sendUln301));
-        console2.log("SendUln302: ", address(sendUln302));
-        console2.log("ReceiveUln301: ", address(receiveUln301));
-        console2.log("ReceiveUln302: ", address(receiveUln302));
-        console2.log("EndpointV1: ", address(endpointV1));
-        console2.log("EndpointV2: ", address(endpointV2));
-        console2.log("PriceFeed: ", address(priceFeed));
-        console2.log("Delegate/Admin(s): ", delegate);
-        console2.log("DVN: ", address(dvn));
-        console2.log("Executor: ", address(executor));
-        console2.log("ExecutorFeeLib: ", address(executorFeeLib));
+        // Step 1: Convert addresses to hexadecimal strings
+        string memory treasuryHex = Strings.toHexString(uint256(uint160(address(treasury))), 20);
+        string memory simpleMessageLibHex = Strings.toHexString(uint256(uint160(address(simpleMessageLib))), 20);
+        string memory sendUln301Hex = Strings.toHexString(uint256(uint160(address(sendUln301))), 20);
+        string memory sendUln302Hex = Strings.toHexString(uint256(uint160(address(sendUln302))), 20);
+        string memory receiveUln301Hex = Strings.toHexString(uint256(uint160(address(receiveUln301))), 20);
+        string memory receiveUln302Hex = Strings.toHexString(uint256(uint160(address(receiveUln302))), 20);
+        string memory endpointV1Hex = Strings.toHexString(uint256(uint160(address(endpointV1))), 20);
+        string memory endpointV2Hex = Strings.toHexString(uint256(uint160(address(endpointV2))), 20);
+        string memory priceFeedHex = Strings.toHexString(uint256(uint160(address(priceFeed))), 20);
+        string memory delegateHex = Strings.toHexString(uint256(uint160(delegate)), 20);
+        string memory executorHex = Strings.toHexString(uint256(uint160(address(executor))), 20);
+        string memory executorFeeLibHex = Strings.toHexString(uint256(uint160(address(executorFeeLib))), 20);
+        string memory dvnHex = Strings.toHexString(uint256(uint160(address(dvn))), 20);
+        string memory dvnFeeLibHex = Strings.toHexString(uint256(uint160(address(dvnFeeLib))), 20);
+
+        // Step 2: Concatenate strings iteratively or in smaller groups
+        string memory content = string(abi.encodePacked("Treasury: ", treasuryHex, "\n"));
+        content = string(abi.encodePacked(content, "SimpleMessageLib: ", simpleMessageLibHex, "\n"));
+        content = string(abi.encodePacked(content, "SendUln301: ", sendUln301Hex, "\n"));
+        content = string(abi.encodePacked(content, "SendUln302: ", sendUln302Hex, "\n"));
+        content = string(abi.encodePacked(content, "ReceiveUln301: ", receiveUln301Hex, "\n"));
+        content = string(abi.encodePacked(content, "ReceiveUln302: ", receiveUln302Hex, "\n"));
+        content = string(abi.encodePacked(content, "EndpointV1: ", endpointV1Hex, "\n"));
+        content = string(abi.encodePacked(content, "EndpointV2: ", endpointV2Hex, "\n"));
+        content = string(abi.encodePacked(content, "PriceFeed: ", priceFeedHex, "\n"));
+        content = string(abi.encodePacked(content, "Delegate/Admin(s): ", delegateHex, "\n"));
+        content = string(abi.encodePacked(content, "Executor: ", executorHex, "\n"));
+        content = string(abi.encodePacked(content, "ExecutorFeeLib: ", executorFeeLibHex, "\n"));
+        content = string(abi.encodePacked(content, "DVN: ", dvnHex, "\n"));
+        content = string(abi.encodePacked(content, "DVNFeeLib: ", dvnFeeLibHex));
+
+        vm.writeFile("lz_infra_addresses.txt", content);
+        console2.log("LZ Infra addresses written to \'lz_infra_addresses.txt\'");
 
         vm.stopBroadcast();
     }
