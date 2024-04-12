@@ -71,9 +71,6 @@ contract LzInfraScript is Script {
     function run() public {
         vm.startBroadcast();
 
-        // Endpoint V2 for Nova
-        endpointV2 = new EndpointV2(EID, delegate);
-
         // Message Libs (Simple, SendUln, ReceiveUln) for Nova
         treasury = new Treasury();
         simpleMessageLib = new SimpleMessageLib(address(endpointV2), address(treasury));
@@ -81,6 +78,9 @@ contract LzInfraScript is Script {
         sendUln302 = new SendUln302(address(endpointV2), TREASURY_GAS_CAP, TREASURY_GAS_FOR_FEE_CAP);
         receiveUln302 = new ReceiveUln302(address(endpointV2));
         // TODO: Add `receiveUln302::setDefaultUlnConfigs`
+
+        // Endpoint V2 for Nova
+        endpointV2 = new EndpointV2(EID, delegate);
 
         // register all 3 message libs. BlockedMessageLib is already registered during EP deployment.
         endpointV2.registerLibrary(address(simpleMessageLib));
@@ -119,6 +119,7 @@ contract LzInfraScript is Script {
         dvn.setDstConfig(dstConfigParams);
         DVNFeeLib dvnFeeLib = new DVNFeeLib(NATIVE_DECIMAL_RATE);
         dvn.setWorkerFeeLib(address(dvnFeeLib));
+        dvn.setDefaultMultiplierBps(100); // TODO: verify 100 ?
 
         // Executor
         executor = new Executor();
@@ -135,6 +136,23 @@ contract LzInfraScript is Script {
         }
 
         // TODO: Wire remote
+
+        // export contract, lib addresses so that it can be used in
+        //      another script to get info like quotes; send txs.
+        console2.log("=====Output variables:");
+        console2.log("Treasury: ", address(treasury));
+        console2.log("SimpleMessageLib: ", address(simpleMessageLib));
+        console2.log("SendUln301: ", address(sendUln301));
+        console2.log("SendUln302: ", address(sendUln302));
+        console2.log("ReceiveUln301: ", address(receiveUln301));
+        console2.log("ReceiveUln302: ", address(receiveUln302));
+        console2.log("EndpointV1: ", address(endpointV1));
+        console2.log("EndpointV2: ", address(endpointV2));
+        console2.log("PriceFeed: ", address(priceFeed));
+        console2.log("Delegate/Admin(s): ", delegate);
+        console2.log("DVN: ", address(dvn));
+        console2.log("Executor: ", address(executor));
+        console2.log("ExecutorFeeLib: ", address(executorFeeLib));
 
         vm.stopBroadcast();
     }
