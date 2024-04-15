@@ -89,7 +89,6 @@ contract LzInfraScript is Script {
         // treasury = new Treasury();
 
         // Endpoint V2 for Nova
-        // CLEANUP: Remove when EP is deployed on Nova. Got error on 13-Apr-2024.
         endpointV2 = ILayerZeroEndpointV2(endpointV2Address);
 
         // Message Libs (Simple, SendUln, ReceiveUln) for Nova
