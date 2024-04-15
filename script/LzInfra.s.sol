@@ -23,6 +23,7 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {IExecutor} from "@layerzerolabs/messagelib/contracts/interfaces/IExecutor.sol";
 import {UlnConfig, SetDefaultUlnConfigParam} from "@layerzerolabs/messagelib/contracts/uln/UlnBase.sol";
 import {SetDefaultExecutorConfigParam, ExecutorConfig} from "@layerzerolabs/messagelib/contracts/SendLibBase.sol";
+import {ILayerZeroEndpointV2} from "@layerzerolabs/protocol/contracts/interfaces/ILayerZeroEndpointV2.sol";
 
 /* 
 
@@ -37,12 +38,14 @@ NOTE: For Nova & Sepolia to support cross-chain messages, you have to deploy the
 contract LzInfraScript is Script {
     // Use the Endpoint networks where this contract is to be deployed
 
-    // Endpoint address, ids, when deploying on Nova
+    // Endpoint address, ids,
+    // Disable comment when deploying on Nova
     address endpointV2Address = vm.envAddress("NOVA_ENDPOINT_V2");
     uint32 private constant LOCAL_EID = 490_000; // for Nova
     uint32 private constant REMOTE_EID = 40161; // for Sepolia
 
-    // Endpoint address, ids, when deploying on Sepolia
+    // Endpoint address, ids,
+    // Disable comment when deploying on Sepolia
     // address endpointV2Address = vm.envAddress("SEPOLIA_ENDPOINT_V2");
     // uint32 private constant LOCAL_EID = 40161; // for Sepolia
     // uint32 private constant REMOTE_EID = 490_000; // for Nova
@@ -57,7 +60,7 @@ contract LzInfraScript is Script {
     address delegate;
 
     SimpleMessageLib simpleMessageLib;
-    EndpointV2 endpointV2;
+    ILayerZeroEndpointV2 endpointV2;
     SendUln302 sendUln302;
     ReceiveUln302 receiveUln302;
     PriceFeed priceFeed;
@@ -87,7 +90,7 @@ contract LzInfraScript is Script {
 
         // Endpoint V2 for Nova
         // CLEANUP: Remove when EP is deployed on Nova. Got error on 13-Apr-2024.
-        endpointV2 = new EndpointV2(LOCAL_EID, delegate);
+        endpointV2 = ILayerZeroEndpointV2(endpointV2Address);
 
         // Message Libs (Simple, SendUln, ReceiveUln) for Nova
         simpleMessageLib = new SimpleMessageLib(address(endpointV2), address(treasury));
