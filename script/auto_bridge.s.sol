@@ -18,35 +18,70 @@ contract AutoBridgeScript is Script, Test {
     uint32 private constant SRC_EID = 490_000; // for Nova
     uint32 private constant DST_EID = 40161; // for Sepolia
 
-    IWTsscLz public wTsscLz;
+    IWTsscLz public wTsscLzNova;
 
-    address payable wTsscLzAddress = payable(vm.envAddress("WTSSCLZ_NOVA"));
+    address payable wTsscLzAddressNova = payable(vm.envAddress("WTSSCLZ_NOVA"));
+    address payable wTsscLzAddressRemote = payable(vm.envAddress("WTSSCLZ_SEPOLIA"));
 
     address delegate;
 
+    uint256 private constant tokensToSend = 0.01 ether;
+
+    function isContract(address account) public view returns (bool) {
+        uint256 size;
+        assembly {
+            size := extcodesize(account)
+        }
+        return (size > 0);
+    }
+
     function setUp() public {
-        // uint256 privateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
-        // delegate = vm.addr(privateKey);
+        // make sure the contracts in "lz_infra_addresses_nova.txt" are deployed (on Nova or Anvil local) before.
+        assertEq(isContract(vm.envAddress("Treasury")), true, "Treasury should be deployed");
+        assertEq(isContract(vm.envAddress("SimpleMessageLib")), true, "SimpleMessageLib should be deployed");
+        assertEq(isContract(vm.envAddress("SendUln301")), true, "SendUln301 should be deployed");
+        assertEq(isContract(vm.envAddress("SendUln302")), true, "SendUln302 should be deployed");
+        assertEq(isContract(vm.envAddress("ReceiveUln301")), true, "ReceiveUln301 should be deployed");
+        assertEq(isContract(vm.envAddress("ReceiveUln302")), true, "ReceiveUln302 should be deployed");
+        assertEq(isContract(vm.envAddress("EndpointV1")), true, "EndpointV1 should be deployed");
+        assertEq(isContract(vm.envAddress("EndpointV2")), true, "EndpointV2 should be deployed");
+        assertEq(isContract(vm.envAddress("PriceFeed")), true, "PriceFeed should be deployed");
+        assertEq(isContract(vm.envAddress("Executor")), true, "Executor should be deployed");
+        assertEq(isContract(vm.envAddress("ExecutorFeeLib")), true, "ExecutorFeeLib should be deployed");
+        assertEq(isContract(vm.envAddress("DVN")), true, "DVN should be deployed");
+        assertEq(isContract(vm.envAddress("DVNFeeLib")), true, "DVNFeeLib should be deployed");
 
-        // For Anvil: `$ forge script ./script/LzInfra.s.sol:LzInfraScript --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --rpc-url http://127.0.0.1:8545 --broadcast`
-        delegate = address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266); // testing for Anvil
+        // make sure delegate gets sufficient faucet from default addresses on Anvil.
+        uint256 privateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
+        delegate = vm.addr(privateKey);
 
-        wTsscLz = IWTsscLz(wTsscLzAddress);
+        wTsscLzNova = IWTsscLz(wTsscLzAddressNova);
+        wTsscLzRemote = IWTsscLz(wTsscLzAddressRemote);
     }
 
     function run() public {
-        vm.startBroadcast();
+        vm.startBroadcast(delegate);
 
-        console2.log("===before deposit: ", delegate.balance);
-        console2.log("\tTSSC Balance: ", wTsscLz.balanceOf(delegate));
-        console2.log("\tWTSSC Balance: ", wTsscLz.balanceOf(delegate));
+        console2.log("===Before deposit:");
+        console2.log("\tTSSC Balance: ", delegate.balance);
+        console2.log("\tWTSSC Balance: ", wTsscLzNova.balanceOf(delegate));
 
-        uint256 tokensToSend = 0.01 ether;
+        // if peer is not set correctly on Nova
+        if (!wTsscLzNova.isPeer(_eid, _peer)) {
+            wTsscLzNova.setPeer(_eid, _peer);
+        }
+        // if peer is not set correctly on Remote
+        if (!wTsscLzRemote.isPeer(_eid, _peer)) {
+            wTsscLzRemote.setPeer(_eid, _peer);
+        }
 
         // deposit
-        vm.startPrank(delegate);
-        wTsscLz.deposit{value: tokensToSend}();
-        assertEq(wTsscLz.balanceOf(delegate), tokensToSend, "Minted must be same as Deposited.");
+        wTsscLzNova.deposit{value: tokensToSend}();
+        assertEq(wTsscLzNova.balanceOf(delegate), tokensToSend, "Minted must be same as Deposited.");
+
+        console2.log("===After deposit:");
+        console2.log("\tTSSC Balance: ", delegate.balance);
+        console2.log("\tWTSSC Balance: ", wTsscLzNova.balanceOf(delegate));
 
         // TODO: may need to change gasLimit
         bytes memory options = OptionsBuilder.newOptions().addExecutorLzReceiveOption(200000, 0);
@@ -55,13 +90,11 @@ contract AutoBridgeScript is Script, Test {
         );
 
         // get the quote
-        MessagingFee memory fee = wTsscLz.quoteSend(sendParam, false);
+        MessagingFee memory fee = wTsscLzNova.quoteSend(sendParam, false);
 
         // send token to receiver (self)
         // TODO: may need to add gas limit
-        wTsscLz.send{value: fee.nativeFee}(sendParam, fee, delegate);
-
-        vm.stopPrank();
+        wTsscLzNova.send{value: fee.nativeFee}(sendParam, fee, delegate);
 
         vm.stopBroadcast();
     }

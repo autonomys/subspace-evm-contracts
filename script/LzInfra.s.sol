@@ -26,12 +26,25 @@ import {SetDefaultExecutorConfigParam, ExecutorConfig} from "@layerzerolabs/mess
 import {ILayerZeroEndpointV2} from "@layerzerolabs/protocol/contracts/interfaces/ILayerZeroEndpointV2.sol";
 
 /* 
-
-For Anvil: `$ forge script ./script/LzInfra.s.sol:LzInfraScript --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --rpc-url http://127.0.0.1:8545 --broadcast`
-For Nova: `$ forge script ./script/LzInfra.s.sol:LzInfraScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url ${NOVA_RPC_URL} --broadcast  --verify --verifier blockscout --verifier-url $NOVA_VERIFIER_URL`
-For Sepolia: `$ forge script ./script/LzInfra.s.sol:LzInfraScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url ${SEPOLIA_RPC_URL} --broadcast  --verify --verifier blockscout --verifier-url $ETHSEPOLIA_VERIFIER_URL`
-
 NOTE: For Nova & Sepolia to support cross-chain messages, you have to deploy the whole script flow on each chain, wiring up for each other.
+
+## Using Anvil
+### For Nova
+1. `$ anvil --fork-url $NOVA_RPC_URL --port 8545`
+2. Transfer faucet tokens (e.g. 500 TSSC) from Anvil address[0] to the address with private key ${DEPLOYER_PRIVATE_KEY}
+3. `$ forge script ./script/LzInfra.s.sol:LzInfraScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url http://127.0.0.1:8545 --broadcast`
+
+### For Sepolia
+1. `$ anvil --fork-url $SEPOLIA_RPC_URL --port 8546`
+2. Transfer faucet tokens (e.g. 500 SepoliaETH) from Anvil address[0] to the address with private key ${DEPLOYER_PRIVATE_KEY}
+3. `$ forge script ./script/LzInfra.s.sol:LzInfraScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url http://127.0.0.1:8546 --broadcast`
+
+
+## For Nova
+`$ forge script ./script/LzInfra.s.sol:LzInfraScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url ${NOVA_RPC_URL} --broadcast  --verify --verifier blockscout --verifier-url $NOVA_VERIFIER_URL`
+
+## For Sepolia
+`$ forge script ./script/LzInfra.s.sol:LzInfraScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url ${SEPOLIA_RPC_URL} --broadcast  --verify --verifier blockscout --verifier-url $ETHSEPOLIA_VERIFIER_URL`
 
 */
 
@@ -40,15 +53,17 @@ contract LzInfraScript is Script {
 
     // Endpoint address, ids,
     // Disable comment when deploying on Nova
-    address endpointV2Address = vm.envAddress("NOVA_ENDPOINT_V2");
-    uint32 private constant LOCAL_EID = 490_000; // for Nova
-    uint32 private constant REMOTE_EID = 40161; // for Sepolia
+    // address endpointV2Address = vm.envAddress("NOVA_ENDPOINT_V2");
+    // uint32 private constant LOCAL_EID = 490_000; // for Nova
+    // uint32 private constant REMOTE_EID = 40161; // for Sepolia
+    // string constant FILE_NAME = "./lz_infra_addresses_nova.txt";
 
     // Endpoint address, ids,
     // Disable comment when deploying on Sepolia
-    // address endpointV2Address = vm.envAddress("SEPOLIA_ENDPOINT_V2");
-    // uint32 private constant LOCAL_EID = 40161; // for Sepolia
-    // uint32 private constant REMOTE_EID = 490_000; // for Nova
+    address endpointV2Address = vm.envAddress("SEPOLIA_ENDPOINT_V2");
+    uint32 private constant LOCAL_EID = 40161; // for Sepolia
+    uint32 private constant REMOTE_EID = 490_000; // for Nova
+    string constant FILE_NAME = "./lz_infra_addresses_sepolia.txt";
 
     // SendUln302
     uint256 private constant TREASURY_GAS_CAP = 100_000;
@@ -61,6 +76,7 @@ contract LzInfraScript is Script {
 
     SimpleMessageLib simpleMessageLib;
     ILayerZeroEndpointV2 endpointV2;
+    // EndpointV2 endpointV2;
     SendUln302 sendUln302;
     ReceiveUln302 receiveUln302;
     PriceFeed priceFeed;
@@ -78,18 +94,16 @@ contract LzInfraScript is Script {
     function setUp() public {
         uint256 privateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
         delegate = vm.addr(privateKey);
-
-        // For Anvil: `$ forge script ./script/LzInfra.s.sol:LzInfraScript --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --rpc-url http://127.0.0.1:8545 --broadcast`
-        // delegate = address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266); // testing for Anvil
     }
 
     function run() public {
-        vm.startBroadcast();
-
-        // treasury = new Treasury();
+        vm.startBroadcast(delegate);
 
         // Endpoint V2 for Nova
         endpointV2 = ILayerZeroEndpointV2(endpointV2Address);
+        // endpointV2 = new EndpointV2(LOCAL_EID, delegate);
+
+        treasury = new Treasury();
 
         // Message Libs (Simple, SendUln, ReceiveUln) for Nova
         simpleMessageLib = new SimpleMessageLib(address(endpointV2), address(treasury));
@@ -99,6 +113,8 @@ contract LzInfraScript is Script {
         // TODO: Add `receiveUln302::setDefaultUlnConfigs`
 
         // register all 3 message libs. BlockedMessageLib is already registered during EP deployment.
+        console2.log("Caller: ", msg.sender);
+        // endpointV2.
         endpointV2.registerLibrary(address(simpleMessageLib));
         endpointV2.registerLibrary(address(sendUln302));
         endpointV2.registerLibrary(address(receiveUln302));
@@ -149,7 +165,9 @@ contract LzInfraScript is Script {
             // libs[1] = address(receiveUln301);
             libs2[1] = address(receiveUln302); // TODO: verify
             libs2[2] = address(sendUln302);
-            executor.initialize(address(endpointV2), address(receiveUln301), libs, address(priceFeed), delegate, admins);
+            executor.initialize(
+                address(endpointV2), address(receiveUln301), libs2, address(priceFeed), delegate, admins
+            );
             executor.setWorkerFeeLib(address(executorFeeLib));
         }
 
@@ -182,6 +200,8 @@ contract LzInfraScript is Script {
         endpointV2.setDefaultSendLibrary(REMOTE_EID, address(sendUln302));
         endpointV2.setDefaultReceiveLibrary(REMOTE_EID, address(receiveUln302), 0);
 
+        vm.stopPrank();
+
         // export contract, lib addresses so that it can be used in
         //      another script to get info like quotes; send txs.
         exportAddresses();
@@ -200,7 +220,7 @@ contract LzInfraScript is Script {
         string memory endpointV1Hex = Strings.toHexString(uint256(uint160(address(endpointV1))), 20);
         string memory endpointV2Hex = Strings.toHexString(uint256(uint160(address(endpointV2))), 20);
         string memory priceFeedHex = Strings.toHexString(uint256(uint160(address(priceFeed))), 20);
-        string memory delegateHex = Strings.toHexString(uint256(uint160(delegate)), 20);
+        // string memory delegateHex = Strings.toHexString(uint256(uint160(delegate)), 20);
         string memory executorHex = Strings.toHexString(uint256(uint160(address(executor))), 20);
         string memory executorFeeLibHex = Strings.toHexString(uint256(uint160(address(executorFeeLib))), 20);
         string memory dvnHex = Strings.toHexString(uint256(uint160(address(dvn))), 20);
@@ -216,13 +236,13 @@ contract LzInfraScript is Script {
         content = string(abi.encodePacked(content, "EndpointV1=", endpointV1Hex, "\n"));
         content = string(abi.encodePacked(content, "EndpointV2=", endpointV2Hex, "\n"));
         content = string(abi.encodePacked(content, "PriceFeed=", priceFeedHex, "\n"));
-        content = string(abi.encodePacked(content, "Delegate/Admin(s)=", delegateHex, "\n"));
+        // content = string(abi.encodePacked(content, "Delegate/Admin(s)=", delegateHex, "\n"));
         content = string(abi.encodePacked(content, "Executor=", executorHex, "\n"));
         content = string(abi.encodePacked(content, "ExecutorFeeLib=", executorFeeLibHex, "\n"));
         content = string(abi.encodePacked(content, "DVN=", dvnHex, "\n"));
         content = string(abi.encodePacked(content, "DVNFeeLib=", dvnFeeLibHex));
 
-        vm.writeFile("lz_infra_addresses.txt", content);
-        console2.log("LZ Infra addresses written to 'lz_infra_addresses.txt'");
+        vm.writeFile(FILE_NAME, content);
+        console2.log("LZ Infra addresses written to ", FILE_NAME);
     }
 }
