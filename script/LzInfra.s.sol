@@ -53,17 +53,17 @@ contract LzInfraScript is Script {
 
     // Endpoint address, ids,
     // Disable comment when deploying on Nova
-    // address endpointV2Address = vm.envAddress("NOVA_ENDPOINT_V2");
-    // uint32 private constant LOCAL_EID = 490_000; // for Nova
-    // uint32 private constant REMOTE_EID = 40161; // for Sepolia
-    // string constant FILE_NAME = "./lz_infra_addresses_nova.txt";
+    address endpointV2Address = vm.envAddress("NOVA_ENDPOINT_V2");
+    uint32 private constant LOCAL_EID = 490_000; // for Nova
+    uint32 private constant REMOTE_EID = 40161; // for Sepolia
+    string constant FILE_NAME = "./lz_infra_addresses_nova.txt";
 
     // Endpoint address, ids,
     // Disable comment when deploying on Sepolia
-    address endpointV2Address = vm.envAddress("SEPOLIA_ENDPOINT_V2");
-    uint32 private constant LOCAL_EID = 40161; // for Sepolia
-    uint32 private constant REMOTE_EID = 490_000; // for Nova
-    string constant FILE_NAME = "./lz_infra_addresses_sepolia.txt";
+    // address endpointV2Address = vm.envAddress("SEPOLIA_ENDPOINT_V2");
+    // uint32 private constant LOCAL_EID = 40161; // for Sepolia
+    // uint32 private constant REMOTE_EID = 490_000; // for Nova
+    // string constant FILE_NAME = "./lz_infra_addresses_sepolia.txt";
 
     // SendUln302
     uint256 private constant TREASURY_GAS_CAP = 100_000;
@@ -113,7 +113,6 @@ contract LzInfraScript is Script {
         // TODO: Add `receiveUln302::setDefaultUlnConfigs`
 
         // register all 3 message libs. BlockedMessageLib is already registered during EP deployment.
-        console2.log("Caller: ", msg.sender);
         // endpointV2.
         endpointV2.registerLibrary(address(simpleMessageLib));
         endpointV2.registerLibrary(address(sendUln302));
@@ -199,8 +198,6 @@ contract LzInfraScript is Script {
 
         endpointV2.setDefaultSendLibrary(REMOTE_EID, address(sendUln302));
         endpointV2.setDefaultReceiveLibrary(REMOTE_EID, address(receiveUln302), 0);
-
-        vm.stopPrank();
 
         // export contract, lib addresses so that it can be used in
         //      another script to get info like quotes; send txs.
