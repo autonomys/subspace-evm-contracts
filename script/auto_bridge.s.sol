@@ -11,19 +11,23 @@ import {MessagingFee} from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfac
 /// @notice AutoBridge Script demonstrates sending of TSSC token from Nova to Sepolia
 /// @dev No need to deploy any contracts. Just read from a separately generated file
 ///     from other script. Here, `lz_infra_addresses.txt` is auto-generated from "LzInfra.s.sol" file
+///
+///     Q. Why script in solidity, not in TS or other lang?
+///     A. Because i need to see the details using foundry logging, and i can't see the details in TS ethers.
 contract AutoBridgeScript is Script, Test {
     using OptionsBuilder for bytes;
 
     // Endpoint ID
-    uint32 private constant SRC_EID = 490_000; // for Nova
-    uint32 private constant DST_EID = 40161; // for Sepolia
+    uint32 private constant LOCAL_EID = 490_000; // for Nova
+    uint32 private constant REMOTE_EID = 40161; // for Sepolia
 
     IWTsscLz public wTsscLzNova;
+    IWTsscLz public wTsscLzRemote;
 
     address payable wTsscLzAddressNova = payable(vm.envAddress("WTSSCLZ_NOVA"));
     address payable wTsscLzAddressRemote = payable(vm.envAddress("WTSSCLZ_SEPOLIA"));
 
-    address delegate;
+    address private delegate;
 
     uint256 private constant tokensToSend = 0.01 ether;
 
@@ -36,7 +40,8 @@ contract AutoBridgeScript is Script, Test {
     }
 
     function setUp() public {
-        // make sure the contracts in "lz_infra_addresses_nova.txt" are deployed (on Nova or Anvil local) before.
+        // make sure the contracts in "lz_infra_addresses_nova.txt" are already deployed (on Nova or Anvil local).
+        // disable comment when deploying on Nova
         assertEq(isContract(vm.envAddress("Treasury")), true, "Treasury should be deployed");
         assertEq(isContract(vm.envAddress("SimpleMessageLib")), true, "SimpleMessageLib should be deployed");
         assertEq(isContract(vm.envAddress("SendUln301")), true, "SendUln301 should be deployed");
@@ -62,40 +67,50 @@ contract AutoBridgeScript is Script, Test {
     function run() public {
         vm.startBroadcast(delegate);
 
-        console2.log("===Before deposit:");
-        console2.log("\tTSSC Balance: ", delegate.balance);
-        console2.log("\tWTSSC Balance: ", wTsscLzNova.balanceOf(delegate));
+        sendTokenFromNova();
 
-        // if peer is not set correctly on Nova
-        if (!wTsscLzNova.isPeer(_eid, _peer)) {
-            wTsscLzNova.setPeer(_eid, _peer);
+        // disable comment when deploying on Sepolia
+        // NOTE: In order to check if the peer is correctly set on Sepolia, check via TS script from `layerzero-demo` repo.
+        // It's not possible to set the peer on Sepolia simultaneously on Sepolia and Nova.
+        // if peer is not set correctly on Remote, set it.
+        // if (!wTsscLzRemote.isPeer(LOCAL_EID, bytes32(uint256(uint160(address(wTsscLzAddressNova)))))) {
+        //     wTsscLzRemote.setPeer(LOCAL_EID, bytes32(uint256(uint160(address(wTsscLzAddressNova)))));
+        // }
+
+        vm.stopBroadcast();
+    }
+
+    function sendTokenFromNova() public {
+        // if peer is not set correctly on Nova, set it.
+        if (!wTsscLzNova.isPeer(REMOTE_EID, bytes32(uint256(uint160(address(wTsscLzAddressRemote)))))) {
+            // NOTE: Won't execute if any action of the entire transaction fails
+            wTsscLzNova.setPeer(REMOTE_EID, bytes32(uint256(uint160(address(wTsscLzAddressRemote)))));
         }
-        // if peer is not set correctly on Remote
-        if (!wTsscLzRemote.isPeer(_eid, _peer)) {
-            wTsscLzRemote.setPeer(_eid, _peer);
-        }
+
+        uint256 preDepositBalance = wTsscLzNova.balanceOf(delegate);
+        console2.log("===Before deposit:");
+        console2.log("\tWTSSC Balance: ", preDepositBalance);
 
         // deposit
-        wTsscLzNova.deposit{value: tokensToSend}();
-        assertEq(wTsscLzNova.balanceOf(delegate), tokensToSend, "Minted must be same as Deposited.");
+        if (tokensToSend > preDepositBalance) {
+            // NOTE: Won't execute if any action of the entire transaction fails
+            wTsscLzNova.deposit{value: tokensToSend - preDepositBalance}();
 
-        console2.log("===After deposit:");
-        console2.log("\tTSSC Balance: ", delegate.balance);
-        console2.log("\tWTSSC Balance: ", wTsscLzNova.balanceOf(delegate));
+            console2.log("===After deposit:");
+            console2.log("\tWTSSC Balance: ", wTsscLzNova.balanceOf(delegate));
+        }
 
         // TODO: may need to change gasLimit
         bytes memory options = OptionsBuilder.newOptions().addExecutorLzReceiveOption(200000, 0);
         SendParam memory sendParam = SendParam(
-            DST_EID, bytes32(uint256(uint160(address(delegate))) << 96), tokensToSend, tokensToSend, options, "", ""
+            REMOTE_EID, bytes32(uint256(uint160(address(delegate)))), tokensToSend, tokensToSend, options, "", ""
         );
 
         // get the quote
         MessagingFee memory fee = wTsscLzNova.quoteSend(sendParam, false);
 
-        // send token to receiver (self)
-        // TODO: may need to add gas limit
-        wTsscLzNova.send{value: fee.nativeFee}(sendParam, fee, delegate);
-
-        vm.stopBroadcast();
+        // // send token to receiver (self)
+        // // TODO: may need to add gas limit
+        // wTsscLzNova.send{value: fee.nativeFee}(sendParam, fee, delegate);
     }
 }
