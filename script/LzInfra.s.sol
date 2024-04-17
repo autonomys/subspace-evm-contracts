@@ -75,8 +75,8 @@ contract LzInfraScript is Script {
     address delegate;
 
     SimpleMessageLib simpleMessageLib;
-    ILayerZeroEndpointV2 endpointV2;
-    // EndpointV2 endpointV2;
+    // ILayerZeroEndpointV2 endpointV2;
+    EndpointV2 endpointV2;
     SendUln302 sendUln302;
     ReceiveUln302 receiveUln302;
     PriceFeed priceFeed;
@@ -100,8 +100,8 @@ contract LzInfraScript is Script {
         vm.startBroadcast(delegate);
 
         // Endpoint V2 for Nova
-        endpointV2 = ILayerZeroEndpointV2(endpointV2Address);
-        // endpointV2 = new EndpointV2(LOCAL_EID, delegate);
+        // endpointV2 = ILayerZeroEndpointV2(endpointV2Address);
+        endpointV2 = new EndpointV2(LOCAL_EID, delegate);
 
         treasury = new Treasury();
 
