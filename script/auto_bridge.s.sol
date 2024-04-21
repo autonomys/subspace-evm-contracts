@@ -40,21 +40,9 @@ contract AutoBridgeScript is Script, Test {
     }
 
     function setUp() public {
-        // make sure the contracts in "lz_infra_addresses_nova.txt" are already deployed (on Nova or Anvil local).
-        // disable comment when deploying on Nova
-        assertEq(isContract(vm.envAddress("Treasury")), true, "Treasury should be deployed");
-        assertEq(isContract(vm.envAddress("SimpleMessageLib")), true, "SimpleMessageLib should be deployed");
-        assertEq(isContract(vm.envAddress("SendUln301")), true, "SendUln301 should be deployed");
-        assertEq(isContract(vm.envAddress("SendUln302")), true, "SendUln302 should be deployed");
-        assertEq(isContract(vm.envAddress("ReceiveUln301")), true, "ReceiveUln301 should be deployed");
-        assertEq(isContract(vm.envAddress("ReceiveUln302")), true, "ReceiveUln302 should be deployed");
-        assertEq(isContract(vm.envAddress("EndpointV1")), true, "EndpointV1 should be deployed");
-        assertEq(isContract(vm.envAddress("EndpointV2")), true, "EndpointV2 should be deployed");
-        assertEq(isContract(vm.envAddress("PriceFeed")), true, "PriceFeed should be deployed");
-        assertEq(isContract(vm.envAddress("Executor")), true, "Executor should be deployed");
-        assertEq(isContract(vm.envAddress("ExecutorFeeLib")), true, "ExecutorFeeLib should be deployed");
-        assertEq(isContract(vm.envAddress("DVN")), true, "DVN should be deployed");
-        assertEq(isContract(vm.envAddress("DVNFeeLib")), true, "DVNFeeLib should be deployed");
+        // NOTE: make sure the contracts in "lz_infra_addresses_nova.txt" are already deployed (on Nova or Anvil local).
+        // NOTE: Also, if required, the endpointV2 address needs to be added to WTsscLz contract or else, need to redeploy it.
+        //       And if WTsscLz contract address changes, then need to `setPeer` on WTsscLz contract on Sepolia.
 
         // make sure delegate gets sufficient faucet from default addresses on Anvil.
         uint256 privateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
@@ -67,6 +55,7 @@ contract AutoBridgeScript is Script, Test {
     function run() public {
         vm.startBroadcast(delegate);
 
+        // disable comment when deploying on Nova
         sendTokenFromNova();
 
         // disable comment when deploying on Sepolia
@@ -108,9 +97,10 @@ contract AutoBridgeScript is Script, Test {
 
         // get the quote
         MessagingFee memory fee = wTsscLzNova.quoteSend(sendParam, false);
+        console2.log("===Quote fee: ", fee.nativeFee);
 
-        // // send token to receiver (self)
-        // // TODO: may need to add gas limit
-        // wTsscLzNova.send{value: fee.nativeFee}(sendParam, fee, delegate);
+        // send token to receiver (self)
+        // TODO: may need to add gas limit
+        wTsscLzNova.send{value: fee.nativeFee}(sendParam, fee, delegate);
     }
 }

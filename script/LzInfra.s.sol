@@ -198,6 +198,8 @@ contract LzInfraScript is Script {
 
         endpointV2.setDefaultSendLibrary(REMOTE_EID, address(sendUln302));
         endpointV2.setDefaultReceiveLibrary(REMOTE_EID, address(receiveUln302), 0);
+        // NOTE: OPTIONAL: set receive library is to overwrite the previously set lib with a timeout (in blocks).
+        // endpointV2.setReceiveLibrary(address(wTsscLzRemote), REMOTE_EID, address(receiveUln302), 0);
 
         // export contract, lib addresses so that it can be used in
         //      another script to get info like quotes; send txs.
