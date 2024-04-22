@@ -8,12 +8,24 @@ import {SendParam} from "@layerzerolabs/oapp/contracts/oft/interfaces/IOFT.sol";
 import {OptionsBuilder} from "@layerzerolabs/oapp/contracts/oapp/libs/OptionsBuilder.sol";
 import {MessagingFee} from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ILayerZeroEndpointV2.sol";
 
+/* 
+
+## For Nova Anvil
+$ forge script ./script/auto_bridge.s.sol:AutoBridgeScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url http://127.0.0.1:8545 --broadcast --legacy -vvvv
+
+## For Nova
+$ forge script ./script/auto_bridge.s.sol:AutoBridgeScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url ${NOVA_RPC_URL} --broadcast --legacy -vvvv
+
+## For Sepolia
+$ forge script ./script/auto_bridge.s.sol:AutoBridgeScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url ${SEPOLIA_RPC_URL} --broadcast -vvvv
+
+*/
 /// @notice AutoBridge Script demonstrates sending of TSSC token from Nova to Sepolia
-/// @dev No need to deploy any contracts. Just read from a separately generated file
+/// @dev No need to deploy any contracts. Just use from a separately generated file
 ///     from other script. Here, `lz_infra_addresses.txt` is auto-generated from "LzInfra.s.sol" file
 ///
 ///     Q. Why script in solidity, not in TS or other lang?
-///     A. Because i need to see the details using foundry logging, and i can't see the details in TS ethers.
+///     A. For debug purpose to view intermediate logs that can't be seen in TS.
 contract AutoBridgeScript is Script, Test {
     using OptionsBuilder for bytes;
 
@@ -30,14 +42,6 @@ contract AutoBridgeScript is Script, Test {
     address private delegate;
 
     uint256 private constant tokensToSend = 0.01 ether;
-
-    function isContract(address account) public view returns (bool) {
-        uint256 size;
-        assembly {
-            size := extcodesize(account)
-        }
-        return (size > 0);
-    }
 
     function setUp() public {
         // NOTE: make sure the contracts in "lz_infra_addresses_nova.txt" are already deployed (on Nova or Anvil local).
@@ -59,22 +63,22 @@ contract AutoBridgeScript is Script, Test {
         sendTokenFromNova();
 
         // disable comment when deploying on Sepolia
-        // NOTE: In order to check if the peer is correctly set on Sepolia, check via TS script from `layerzero-demo` repo.
-        // It's not possible to set the peer on Sepolia simultaneously on Sepolia and Nova.
-        // if peer is not set correctly on Remote, set it.
-        // if (!wTsscLzRemote.isPeer(LOCAL_EID, bytes32(uint256(uint160(address(wTsscLzAddressNova)))))) {
-        //     wTsscLzRemote.setPeer(LOCAL_EID, bytes32(uint256(uint160(address(wTsscLzAddressNova)))));
-        // }
+        // checkAndSetPeer(wTsscLzRemote, LOCAL_EID, wTsscLzAddressNova);
 
         vm.stopBroadcast();
     }
 
-    function sendTokenFromNova() public {
-        // if peer is not set correctly on Nova, set it.
-        if (!wTsscLzNova.isPeer(REMOTE_EID, bytes32(uint256(uint160(address(wTsscLzAddressRemote)))))) {
-            // NOTE: Won't execute if any action of the entire transaction fails
-            wTsscLzNova.setPeer(REMOTE_EID, bytes32(uint256(uint160(address(wTsscLzAddressRemote)))));
+    // NOTE: It's not possible to set the peer on Sepolia simultaneously on Sepolia and Nova unlike TS Script.
+    //          Won't execute if any action of the entire transaction fails
+    // if peer is incorrectly/not set on Remote, set it.
+    function checkAndSetPeer(IWTsscLz oftA, uint32 localEid, address oftBAddres) private {
+        if (!oftA.isPeer(localEid, bytes32(uint256(uint160(oftBAddres))))) {
+            oftA.setPeer(localEid, bytes32(uint256(uint160(oftBAddres))));
         }
+    }
+
+    function sendTokenFromNova() private {
+        checkAndSetPeer(wTsscLzNova, REMOTE_EID, wTsscLzAddressRemote);
 
         uint256 preDepositBalance = wTsscLzNova.balanceOf(delegate);
         console2.log("===Before deposit:");

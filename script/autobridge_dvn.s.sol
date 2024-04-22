@@ -10,7 +10,9 @@ import {UlnConfig} from "@layerzerolabs/messagelib/contracts/uln/UlnBase.sol";
 import {IReceiveLib} from "../src/interfaces/IReceiveLib.sol";
 
 /* 
-    Test on Destination chain (Sepolia here) for DVN, Executor roles.
+    Run on Destination chain (Sepolia here) for DVN, Executor roles.
+
+    Sepolia: forge script script/autobridge_dvn.sol:AutoBridgeDVNScript --private-key $DEPLOYER_PRIVATE_KEY --rpc-url $SEPOLIA_RPC_URL --broadcast -vvvv
 */
 contract AutoBridgeDVNScript is Script, Test {
     ILayerZeroEndpointV2 endpointV2Dst;
@@ -51,6 +53,7 @@ contract AutoBridgeDVNScript is Script, Test {
         UlnConfig memory ulnConfig = receiveUlnE2Dst.getUlnConfig(address(wTsscLzDst), srcEid);
         console2.log("Confirmations: ", ulnConfig.confirmations);
 
+        // CLEANUP: Remove later
         // // Packet memory packet = deserializePacket(encodedPacket);
         // (Packet memory packet) = decode(encodedPacket);
 
@@ -72,18 +75,18 @@ contract AutoBridgeDVNScript is Script, Test {
         console2.logBytes32(payloadHash);
 
         // verify [OPTIONAL]. It's alredy included in `commitVerification` step.
-        // receiveUlnE2Dst.verify(packetHeader, payloadHash, ulnConfig.confirmations);
+        receiveUlnE2Dst.verify(packetHeader, payloadHash, ulnConfig.confirmations);
 
         // check if verifiable before committing to save gas (with failure)
         console2.log("Packet header hash");
         console2.logBytes32(keccak256(packetHeader));
-        vm.stopBroadcast();
         receiveUlnE2Dst.verifiable(ulnConfig, keccak256(packetHeader), payloadHash);
 
-        vm.broadcast(ulnConfig.requiredDVNs[0]);
+        // vm.broadcast(ulnConfig.requiredDVNs[0]);
         // verify and commit verification
         receiveUlnE2Dst.commitVerification(packetHeader, payloadHash);
 
+        // CLEANUP: remove later
         // verified
         // assertEq(uint256(receiveUln302View.verifiable(packetHeader, payloadHash)), uint256(VerificationState.Verified));
         // executable
@@ -97,60 +100,8 @@ contract AutoBridgeDVNScript is Script, Test {
         //     nativeDrop
         // );
 
-        // vm.stopBroadcast();
+        // TODO: Add executor's job
+
+        vm.stopBroadcast();
     }
-
-    // function decode(bytes memory data) internal pure returns (Packet memory packet) {
-    //     // (uint x, address addr, uint[] memory arr, MyStruct myStruct) = ...
-    //     (packet) = abi.decode(data, (Packet));
-    // }
-
-    // function deserializePacket(bytes memory data) public pure returns (Packet memory) {
-    //     Packet memory packet;
-    //     uint256 offset = 33; // Start reading after the length prefix of dynamic bytes array
-
-    //     uint64 nonce;
-    //     uint32 srcEid;
-    //     address sender;
-    //     uint32 dstEid;
-    //     bytes32 receiver;
-    //     bytes32 guid;
-    //     bytes memory message;
-
-    //     assembly {
-    //         // Read uint64 nonce
-    //         nonce := mload(add(data, offset))
-
-    //         // Read uint32 srcEid, positioned right after nonce
-    //         srcEid := mload(add(data, add(offset, 8)))
-
-    //         // Read address sender, positioned right after srcEid
-    //         sender := mload(add(data, add(offset, 12)))
-
-    //         // Read uint32 dstEid, positioned after sender
-    //         dstEid := mload(add(data, add(offset, 32)))
-
-    //         // Read bytes32 receiver, positioned right after dstEid
-    //         receiver := mload(add(data, add(offset, 36)))
-
-    //         // Read bytes32 guid, positioned right after receiver
-    //         guid := mload(add(data, add(offset, 68)))
-
-    //         // Handle the message bytes
-    //         let messageOffset := add(data, add(offset, 100))
-    //         let messageLength := mload(messageOffset)
-    //         message := mload(add(messageOffset, 32))
-    //     }
-
-    //     // Assign values from temporary variables
-    //     packet.nonce = nonce;
-    //     packet.srcEid = srcEid;
-    //     packet.sender = sender;
-    //     packet.dstEid = dstEid;
-    //     packet.receiver = receiver;
-    //     packet.guid = guid;
-    //     packet.message = message;
-
-    //     return packet;
-    // }
 }
