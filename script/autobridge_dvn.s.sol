@@ -41,8 +41,7 @@ contract AutoBridgeDVNScript is Script, Test {
         // This encodedPacket is received from src chain (Nova here).
         // As this is a foundry script and can't be hosted to listen to emitted events, so hardcoded.
         bytes memory encodedPacket =
-            hex"01000000000000000300077a10000000000000000000000000378e37eb673fb0604aaad644c8813e084c38ab4100009ce100000000000000000000000087aca95fb76d1617fcb068c4154594ec6149b0ffd1a1330cee6cf6dd16fd47ceefe8e7b1857e999ce4f6a3af26a69694419a8dd4000000000000000000000000b751710af8ce68677ab960adb103060f38d097140000000000002710";
-
+            hex"01000000000000000100077a1000000000000000000000000071a8a8fa7fba2e5f74d58dcb567ce87c46cceea600009ce10000000000000000000000001ae29d803707aa8154aa82c4eb4eff8401a1b94becdd7a8e31835c0d31c10cce0425339a7cf315b2246f82a5b4c1ecc1312f189e000000000000000000000000b751710af8ce68677ab960adb103060f38d097140000000000002710";
         // 3. After receiving the fee, your DVN should query the address of the MessageLib on the destination chain
         address receiveUlnE2DstAddress = endpointV2Dst.defaultReceiveLibrary(srcEid);
         receiveUlnE2Dst = IReceiveLib(receiveUlnE2DstAddress);

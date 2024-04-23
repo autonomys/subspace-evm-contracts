@@ -879,10 +879,10 @@ In order to debug further as to why the commit verification fails, used AutoBrid
 <details><summary>Log:</summary>
 
 ```sh
-forge script script/autobridge_dvn.s.sol:AutoBridgeDVNScript --private-key $DEPLOYER_PRIVATE_KEY --rpc-url $SEPOLIA_RPC_URL --broadcast -vvvv 
+forge script script/autobridge_dvn.s.sol:AutoBridgeDVNScript --private-key $DEPLOYER_PRIVATE_KEY --rpc-url $SEPOLIA_RPC_URL --broadcast -vvvv                           ⏎
 [⠒] Compiling...
-[⠔] Compiling 1 files with 0.8.24
-[⠒] Solc 0.8.24 finished in 1.35s
+[⠒] Compiling 1 files with 0.8.24
+[⠑] Solc 0.8.24 finished in 1.43s
 Compiler run successful!
 Traces:
   [1484463] → new AutoBridgeDVNScript@0x5b73C5498c1E3b4dbA84de0F1833c4a029d90519
@@ -903,7 +903,7 @@ Traces:
     │   └─ ← [Return] <env var value>
     └─ ← [Stop] 
 
-  [87950] AutoBridgeDVNScript::run()
+  [105850] AutoBridgeDVNScript::run()
     ├─ [0] VM::startBroadcast(0xB751710Af8Ce68677aB960adB103060f38d09714)
     │   └─ ← [Return] 
     ├─ [2614] 0x7e1C189a05Cc36AD671D3665c2f6351931841779::defaultReceiveLibrary(490000 [4.9e5]) [staticcall]
@@ -914,20 +914,20 @@ Traces:
     │   └─ ← [Stop] 
     ├─ [0] console::log("Packet Header:") [staticcall]
     │   └─ ← [Stop] 
-    ├─ [0] console::logBytes(0x01000000000000000300077a10000000000000000000000000378e37eb673fb0604aaad644c8813e084c38ab4100009ce100000000000000000000000087aca95fb76d1617fcb068c4154594ec6149b0ff) [staticcall]
+    ├─ [0] console::logBytes(0x01000000000000000100077a1000000000000000000000000071a8a8fa7fba2e5f74d58dcb567ce87c46cceea600009ce10000000000000000000000001ae29d803707aa8154aa82c4eb4eff8401a1b94b) [staticcall]
     │   └─ ← [Stop] 
     ├─ [0] console::log("Payload hash:") [staticcall]
     │   └─ ← [Stop] 
-    ├─ [0] console::logBytes32(0xe818f30a57caaa90cc087681f1259e4f3a32065c0c647f2bc45f8b55ec0c359e) [staticcall]
+    ├─ [0] console::logBytes32(0xd1a10d9ab15d1b22216d38d80125d4f8b183f108c40d46c1e24f253db221f53c) [staticcall]
     │   └─ ← [Stop] 
-    ├─ [6606] 0xc860046377C5Dfe437501691712Ac7bAdf3A490d::verify(0x01000000000000000300077a10000000000000000000000000378e37eb673fb0604aaad644c8813e084c38ab4100009ce100000000000000000000000087aca95fb76d1617fcb068c4154594ec6149b0ff, 0xe818f30a57caaa90cc087681f1259e4f3a32065c0c647f2bc45f8b55ec0c359e, 1)
-    │   ├─ emit PayloadVerified(dvn: 0xB751710Af8Ce68677aB960adB103060f38d09714, header: 0x01000000000000000300077a10000000000000000000000000378e37eb673fb0604aaad644c8813e084c38ab4100009ce100000000000000000000000087aca95fb76d1617fcb068c4154594ec6149b0ff, confirmations: 1, proofHash: 0xe818f30a57caaa90cc087681f1259e4f3a32065c0c647f2bc45f8b55ec0c359e)
+    ├─ [26506] 0xc860046377C5Dfe437501691712Ac7bAdf3A490d::verify(0x01000000000000000100077a1000000000000000000000000071a8a8fa7fba2e5f74d58dcb567ce87c46cceea600009ce10000000000000000000000001ae29d803707aa8154aa82c4eb4eff8401a1b94b, 0xd1a10d9ab15d1b22216d38d80125d4f8b183f108c40d46c1e24f253db221f53c, 1)
+    │   ├─ emit PayloadVerified(dvn: 0xB751710Af8Ce68677aB960adB103060f38d09714, header: 0x01000000000000000100077a1000000000000000000000000071a8a8fa7fba2e5f74d58dcb567ce87c46cceea600009ce10000000000000000000000001ae29d803707aa8154aa82c4eb4eff8401a1b94b, confirmations: 1, proofHash: 0xd1a10d9ab15d1b22216d38d80125d4f8b183f108c40d46c1e24f253db221f53c)
     │   └─ ← [Stop] 
     ├─ [0] console::log("Packet header hash") [staticcall]
     │   └─ ← [Stop] 
-    ├─ [0] console::logBytes32(0x308e3096c8a586683b0dc0532815ca0ad76d1c5b187daab60a0e97d66bd5f160) [staticcall]
+    ├─ [0] console::logBytes32(0x611512649b68155d676a276f3001129545147d494cc37528474b745287b287c6) [staticcall]
     │   └─ ← [Stop] 
-    ├─ [7648] 0xc860046377C5Dfe437501691712Ac7bAdf3A490d::verifiable(UlnConfig({ confirmations: 1, requiredDVNCount: 1, optionalDVNCount: 0, optionalDVNThreshold: 0, requiredDVNs: [0x3754b003Bc45E77E89042A17F82b25FDf2C1cd4e], optionalDVNs: [] }), 0x308e3096c8a586683b0dc0532815ca0ad76d1c5b187daab60a0e97d66bd5f160, 0xe818f30a57caaa90cc087681f1259e4f3a32065c0c647f2bc45f8b55ec0c359e) [staticcall]
+    ├─ [7648] 0xc860046377C5Dfe437501691712Ac7bAdf3A490d::verifiable(UlnConfig({ confirmations: 1, requiredDVNCount: 1, optionalDVNCount: 0, optionalDVNThreshold: 0, requiredDVNs: [0x3754b003Bc45E77E89042A17F82b25FDf2C1cd4e], optionalDVNs: [] }), 0x611512649b68155d676a276f3001129545147d494cc37528474b745287b287c6, 0xd1a10d9ab15d1b22216d38d80125d4f8b183f108c40d46c1e24f253db221f53c) [staticcall]
     │   ├─ [0] console::log("inside verifiable function") [staticcall]
     │   │   └─ ← [Stop] 
     │   ├─ [0] console::log("==before-_config.requiredDVNCount") [staticcall]
@@ -937,7 +937,7 @@ Traces:
     │   ├─ [0] console::log("==inside-if-verified", 0) [staticcall]
     │   │   └─ ← [Stop] 
     │   └─ ← [Return] false
-    ├─ [9196] 0xc860046377C5Dfe437501691712Ac7bAdf3A490d::commitVerification(0x01000000000000000300077a10000000000000000000000000378e37eb673fb0604aaad644c8813e084c38ab4100009ce100000000000000000000000087aca95fb76d1617fcb068c4154594ec6149b0ff, 0xe818f30a57caaa90cc087681f1259e4f3a32065c0c647f2bc45f8b55ec0c359e)
+    ├─ [7196] 0xc860046377C5Dfe437501691712Ac7bAdf3A490d::commitVerification(0x01000000000000000100077a1000000000000000000000000071a8a8fa7fba2e5f74d58dcb567ce87c46cceea600009ce10000000000000000000000001ae29d803707aa8154aa82c4eb4eff8401a1b94b, 0xd1a10d9ab15d1b22216d38d80125d4f8b183f108c40d46c1e24f253db221f53c)
     │   ├─ [0] console::log("==before-_config.requiredDVNCount") [staticcall]
     │   │   └─ ← [Stop] 
     │   ├─ [0] console::log("==outside-if-verified", 0) [staticcall]
@@ -952,11 +952,11 @@ Traces:
 == Logs ==
   Confirmations:  1
   Packet Header:
-  0x01000000000000000300077a10000000000000000000000000378e37eb673fb0604aaad644c8813e084c38ab4100009ce100000000000000000000000087aca95fb76d1617fcb068c4154594ec6149b0ff
+  0x01000000000000000100077a1000000000000000000000000071a8a8fa7fba2e5f74d58dcb567ce87c46cceea600009ce10000000000000000000000001ae29d803707aa8154aa82c4eb4eff8401a1b94b
   Payload hash:
-  0xe818f30a57caaa90cc087681f1259e4f3a32065c0c647f2bc45f8b55ec0c359e
+  0xd1a10d9ab15d1b22216d38d80125d4f8b183f108c40d46c1e24f253db221f53c
   Packet header hash
-  0x308e3096c8a586683b0dc0532815ca0ad76d1c5b187daab60a0e97d66bd5f160
+  0x611512649b68155d676a276f3001129545147d494cc37528474b745287b287c6
   inside verifiable function
   ==before-_config.requiredDVNCount
   ==outside-if-verified 0
