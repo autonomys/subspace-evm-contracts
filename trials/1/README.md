@@ -2,7 +2,7 @@
 
 <u>About</u>: "LZInfra script: a part is LOCAL_EID, another part is REMOTE_EID".
 
-<u>Commit</u>: [773e6d8ccedb38f39ac31a34ec309065a7358ce7](https://github.com/subspace/subspace-evm-contracts/commit/773e6d8ccedb38f39ac31a34ec309065a7358ce7)
+<u>Commit</u>: [03e64ecb38a788ebdb14168c8754f07db33d6bb4](https://github.com/subspace/subspace-evm-contracts/commit/03e64ecb38a788ebdb14168c8754f07db33d6bb4)
 
 ## Description
 
