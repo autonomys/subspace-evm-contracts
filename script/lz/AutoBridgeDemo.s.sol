@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Script, console2} from "forge-std/Script.sol";
 import {Test} from "forge-std/Test.sol";
-import {IWTsscLz} from "../src/interfaces/IWTsscLz.sol";
+import {IWTsscLz} from "../../src/interfaces/IWTsscLz.sol";
 import {SendParam} from "@layerzerolabs/oapp/contracts/oft/interfaces/IOFT.sol";
 import {OptionsBuilder} from "@layerzerolabs/oapp/contracts/oapp/libs/OptionsBuilder.sol";
 import {MessagingFee} from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ILayerZeroEndpointV2.sol";
@@ -11,22 +11,22 @@ import {MessagingFee} from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfac
 /* 
 
 ## For Nova Anvil
-$ forge script ./script/auto_bridge.s.sol:AutoBridgeScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url http://127.0.0.1:8545 --broadcast --legacy -vvvv
+$ forge script ./script/lz/AutoBridgeDemo.s.sol:AutoBridgeDemoScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url http://127.0.0.1:8545 --broadcast --legacy -vvvv
 
 ## For Nova
-$ forge script ./script/auto_bridge.s.sol:AutoBridgeScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url ${NOVA_RPC_URL} --broadcast --legacy -vvvv
+$ forge script ./script/lz/AutoBridgeDemo.s.sol:AutoBridgeDemoScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url ${NOVA_RPC_URL} --broadcast --legacy -vvvv
 
 ## For Sepolia
-$ forge script ./script/auto_bridge.s.sol:AutoBridgeScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url ${SEPOLIA_RPC_URL} --broadcast -vvvv
+$ forge script ./script/lz/AutoBridgeDemo.s.sol:AutoBridgeDemoScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url ${SEPOLIA_RPC_URL} --broadcast -vvvv
 
 */
-/// @notice AutoBridge Script demonstrates sending of TSSC token from Nova to Sepolia
+/// @notice AutoBridgeDemo Script demonstrates sending of TSSC token from Nova to Sepolia
 /// @dev No need to deploy any contracts. Just use from a separately generated file
-///     from other script. Here, `lz_infra_addresses.txt` is auto-generated from "LzInfra.s.sol" file
+///     from other script. Here, `lz_infra_addresses.txt` is auto-generated from "LZSetup.s.sol" file
 ///
 ///     Q. Why script in solidity, not in TS or other lang?
 ///     A. For debug purpose to view intermediate logs that can't be seen in TS.
-contract AutoBridgeScript is Script, Test {
+contract AutoBridgeDemoScript is Script, Test {
     using OptionsBuilder for bytes;
 
     // Endpoint ID

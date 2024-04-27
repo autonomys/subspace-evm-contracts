@@ -32,34 +32,35 @@ NOTE: For Nova & Sepolia to support cross-chain messages, you have to deploy the
 ### For Nova
 1. `$ anvil --fork-url $NOVA_RPC_URL --port 8545`
 2. Transfer faucet tokens (e.g. 500 TSSC) from Anvil address[0] to the address with private key ${DEPLOYER_PRIVATE_KEY}
-3. `$ forge script ./script/LzInfra.s.sol:LzInfraScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url http://127.0.0.1:8545 --broadcast`
+3. `$ forge script ./script/lz/LZSetup.s.sol:LZSetupScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url http://127.0.0.1:8545 --broadcast`
 
 ### For Sepolia
 1. `$ anvil --fork-url $SEPOLIA_RPC_URL --port 8546`
 2. Transfer faucet tokens (e.g. 500 SepoliaETH) from Anvil address[0] to the address with private key ${DEPLOYER_PRIVATE_KEY}
-3. `$ forge script ./script/LzInfra.s.sol:LzInfraScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url http://127.0.0.1:8546 --broadcast`
+3. `$ forge script ./script/lz/LZSetup.s.sol:LZSetupScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url http://127.0.0.1:8546 --broadcast`
 
 
 ## For Nova
-`$ forge script ./script/LzInfra.s.sol:LzInfraScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url ${NOVA_RPC_URL} --broadcast  --verify --verifier blockscout --verifier-url $NOVA_VERIFIER_URL`
+`$ forge script ./script/lz/LZSetup.s.sol:LZSetupScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url ${NOVA_RPC_URL} --broadcast  --verify --verifier blockscout --verifier-url $NOVA_VERIFIER_URL`
 
 ## For Sepolia
-`$ forge script ./script/LzInfra.s.sol:LzInfraScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url ${SEPOLIA_RPC_URL} --broadcast  --verify --verifier blockscout --verifier-url $ETHSEPOLIA_VERIFIER_URL`
+`$ forge script ./script/lz/LZSetup.s.sol:LZSetupScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url ${SEPOLIA_RPC_URL} --broadcast  --verify --verifier blockscout --verifier-url $ETHSEPOLIA_VERIFIER_URL`
 
 */
-
-contract LzInfraScript is Script {
-    // Use the Endpoint networks where this contract is to be deployed
-
+/// @title LZ Setup Script
+/// @author abhi3700
+/// @notice LZ Setup Script
+/// @dev Setup LZ for Nova & Sepolia in 2 runs respectively
+contract LZSetupScript is Script {
     // Endpoint address, ids,
-    // Disable comment when deploying on Nova
+    // NOTE: Disable comment when deploying on Nova
     // address endpointV2Address = vm.envAddress("NOVA_ENDPOINT_V2");
     // uint32 private constant LOCAL_EID = 490_000; // for Nova
     // uint32 private constant REMOTE_EID = 40161; // for Sepolia
     // string constant FILE_NAME = "./lz_infra_addresses_nova.txt";
 
     // Endpoint address, ids,
-    // Disable comment when deploying on Sepolia
+    // NOTE: Disable comment when deploying on Sepolia
     address endpointV2Address = vm.envAddress("SEPOLIA_ENDPOINT_V2");
     uint32 private constant LOCAL_EID = 40161; // for Sepolia
     uint32 private constant REMOTE_EID = 490_000; // for Nova
@@ -219,7 +220,6 @@ contract LzInfraScript is Script {
         string memory endpointV1Hex = Strings.toHexString(uint256(uint160(address(endpointV1))), 20);
         string memory endpointV2Hex = Strings.toHexString(uint256(uint160(address(endpointV2))), 20);
         string memory priceFeedHex = Strings.toHexString(uint256(uint160(address(priceFeed))), 20);
-        // string memory delegateHex = Strings.toHexString(uint256(uint160(delegate)), 20);
         string memory executorHex = Strings.toHexString(uint256(uint160(address(executor))), 20);
         string memory executorFeeLibHex = Strings.toHexString(uint256(uint160(address(executorFeeLib))), 20);
         string memory dvnHex = Strings.toHexString(uint256(uint160(address(dvn))), 20);
@@ -235,7 +235,6 @@ contract LzInfraScript is Script {
         content = string(abi.encodePacked(content, "EndpointV1=", endpointV1Hex, "\n"));
         content = string(abi.encodePacked(content, "EndpointV2=", endpointV2Hex, "\n"));
         content = string(abi.encodePacked(content, "PriceFeed=", priceFeedHex, "\n"));
-        // content = string(abi.encodePacked(content, "Delegate/Admin(s)=", delegateHex, "\n"));
         content = string(abi.encodePacked(content, "Executor=", executorHex, "\n"));
         content = string(abi.encodePacked(content, "ExecutorFeeLib=", executorFeeLibHex, "\n"));
         content = string(abi.encodePacked(content, "DVN=", dvnHex, "\n"));

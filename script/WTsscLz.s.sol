@@ -24,8 +24,8 @@ import {WTsscLz} from "../src/WTsscLz.sol";
 */
 contract WTsscLzScript is Script {
     // Provide Endpoint networks where this contract is to be deployed
-    address epContract = vm.envAddress("NOVA_ENDPOINT_V2");
-    // address epContract = vm.envAddress("SEPOLIA_ENDPOINT_V2");
+    // address epContract = vm.envAddress("NOVA_ENDPOINT_V2");
+    address epContract = vm.envAddress("SEPOLIA_ENDPOINT_V2");
 
     address delegate;
 
