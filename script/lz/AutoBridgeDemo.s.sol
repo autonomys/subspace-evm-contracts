@@ -60,10 +60,10 @@ contract AutoBridgeDemoScript is Script, Test {
         vm.startBroadcast(delegate);
 
         // disable comment when deploying on Nova
-        sendTokenFromNova();
+        // sendTokenFromNova();
 
         // disable comment when deploying on Sepolia
-        // checkAndSetPeer(wTsscLzRemote, LOCAL_EID, wTsscLzAddressNova);
+        checkAndSetPeer(wTsscLzRemote, LOCAL_EID, wTsscLzAddressNova);
 
         vm.stopBroadcast();
     }
@@ -71,9 +71,9 @@ contract AutoBridgeDemoScript is Script, Test {
     // NOTE: It's not possible to set the peer on Sepolia simultaneously on Sepolia and Nova unlike TS Script.
     //          Won't execute if any action of the entire transaction fails
     // if peer is incorrectly/not set on Remote, set it.
-    function checkAndSetPeer(IWTsscLz oftA, uint32 localEid, address oftBAddres) private {
-        if (!oftA.isPeer(localEid, bytes32(uint256(uint160(oftBAddres))))) {
-            oftA.setPeer(localEid, bytes32(uint256(uint160(oftBAddres))));
+    function checkAndSetPeer(IWTsscLz oftA, uint32 localEid, address oftBAddress) private {
+        if (!oftA.isPeer(localEid, bytes32(uint256(uint160(oftBAddress))))) {
+            oftA.setPeer(localEid, bytes32(uint256(uint160(oftBAddress))));
         }
     }
 

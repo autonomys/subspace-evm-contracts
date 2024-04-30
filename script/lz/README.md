@@ -4,7 +4,7 @@
 
 ![](../../img/auto_bridge.png)
 
-## 1. Deploy EndpointV2 contracts on both chains
+## 1. Deploy EndpointV2 contracts on both chains [OPTIONAL]
 
 Use `script/EndpointV2.s.sol:EndpointV2Script`
 
@@ -545,7 +545,7 @@ Paid: 0.00362947483329298 ETH (3084676 gas * 1.176614605 gwei)
 ],
 ```
 
-## 4. Send tokens from src chain
+## 4. Init & Send tokens from src chain
 
 Run AutoBridgeDemo script: `script/lz/AutoBridgeDemo.s.sol:AutoBridgeDemoScript` mainly on src chain to send tokens to dst chain.
 
@@ -567,23 +567,21 @@ Run AutoBridgeDemo script: `script/lz/AutoBridgeDemo.s.sol:AutoBridgeDemoScript`
     | _eid | uint32 | 490000 |
     | _peer | bytes32 | 0x71a8a8fa7fba2e5f74d58dcb567ce87c46cceea60000000000000000000 |
 
+```sh
+$ bun auto-bridge:demo init
+$ tsc && node dist/demos/src/auto-bridge/index.js init
+Incorrect/No peer was set on Nova.
+    So, correct peer set on Nova via tx hash: 0xe84d6760fd409d154e9061c6ea6e1a07932cf4befa5aa8a3f8fcb271533ad037 in block #467929
+Incorrect/No peer was set on Sepolia.
+    So, correct peer set on Sepolia via tx hash: 0x38c5b44af9527417541ad1dc85dfd1cf3c72bdf7aff03e8b5b0e34c4ca609433 in block #5803754
+```
+
+> This is done only once during 1st run.
+
 2. `quoteSend`: get quote for sending tokens from src side.
 3. `send`: send tokens from src side
 
 Result of TS script is same as expected from Solidity script 🎉.
-
-```sh
-# Network:
-# src: Nova Anvil, dst: Sepolia
-❯ bun auto-bridge
-$ tsc && node dist/demos/src/auto-bridge/index.js
-Incorrect/No peer was set on Nova.
-    So, correct peer set on Nova via tx hash: 0x78e9a9c54ed303ca5fb757c688c8ae82e1e5b470a02412478fb6094e142e399e in block #425372
-Incorrect/No peer was set on Sepolia.
-    So, correct peer set on Sepolia via tx hash: 0xcfd50ed296b05b7a5c1cc77d9d067b0e4116b65f7fe2cea4d25694aa7ddac2ee in block #5768040
-```
-
-> This is done once during 1st run.
 
 To send tokens:
 
@@ -782,32 +780,31 @@ Listen to emitted events from src chain and extract message for verification & r
 <details><summary>Log:</summary>
 
 ```sh
-Listening for emitted events from WTsscLZ: 0xFe44...6B28 on Nova...
+$ bun auto-bridge:dvn
+tsc && node dist/demos/src/auto-bridge/dvn.js
+Listening for emitted events from WTsscLZ: 0xA667...edb1 on Nova...
 =====================================================
 📤 Packet Sent from Nova 🔗:
-    - Nonce: 48
-    - Sender contract: 0xfe4430822f79b1fb24f67593df68947de6a96b28
-    Encoded Packet Hex: 0x01000000000000003000077a10000000000000000000000000fe4430822f79b1fb24f67593df68947de6a96b2800009ce1000000000000000000000000cfe0a0163b7f5bcea14e7beb4da1fe1a2136f5ffb7ae7222a7e9dfa3ba6137c852885d8f8645f6cbbc9a7f6e4e078382d24d78e2000000000000000000000000b751710af8ce68677ab960adb103060f38d097140000000000002710
-    Options: 0x000301001101000000000000000000000000007a1200
-    Send Library: 0x7063240061be3ABEde39DC3fd0c4CfFEE4061497
+    - Nonce: 4
+    - Sender contract: 0xa66782c958e08275566463cb76a7892e72f2edb1
 =====================================================
 🚚 Status: Inflight
 =====================================================
 
 🔍 DVN verifies
-   - Transaction Hash: 0x567071cdc45c6ea60576c6b38ba004d99aa5b8a2f5ed9f9b5f7f856118568c91
-   - Block Number: #5787804
+   - Transaction Hash: 0xae31b4bc839f0ba6574208dc10cd8a34dbfde3fdd220059e669baaa9d80b6ffb
+   - Block Number: #5806271
 =====================================================
 🔄 Status: Confirming
 =====================================================
 
 ✔️ Commit Verification
-   - Transaction Hash: 0x6eed9ab14fbd96ea9a3c8915b390c1e5f9f744fceab536beb184c609ae2180b5
-   - Block Number: #5787805
+   - Transaction Hash: 0x9b4afd7fdc283829a3887ae13a5f8755dce6fe889c4f9a8838af697c18bd3cfa
+   - Block Number: #5806273
 
 📬 lzReceive
-   - Transaction Hash: 0x2b8de13b36ffd907b069f689c9f566868af4af6b4528a5dba14cbd2a02c3143c
-   - Block Number: #5787806
+   - Transaction Hash: 0x5b814ba621ef76af3b30c866d2ab6a5d38d703f31beb690eebe2aed7d250840d
+   - Block Number: #5806275
 =====================================================
 ✅ Status: Delivered
 =====================================================

@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Script, console2} from "forge-std/Script.sol";
 import {EndpointV2} from "@layerzerolabs/protocol/contracts/EndpointV2.sol";
+import {EndpointV2View} from "@layerzerolabs/protocol/contracts/EndpointV2View.sol";
 import {SendUln302} from "@layerzerolabs/messagelib/contracts/uln/uln302/SendUln302.sol";
 import {ReceiveUln302} from "@layerzerolabs/messagelib/contracts/uln/uln302/ReceiveUln302.sol";
 import {PriceFeed} from "@layerzerolabs/messagelib/contracts/PriceFeed.sol";
@@ -31,13 +32,11 @@ NOTE: For Nova & Sepolia to support cross-chain messages, you have to deploy the
 ## Using Anvil
 ### For Nova
 1. `$ anvil --fork-url $NOVA_RPC_URL --port 8545`
-2. Transfer faucet tokens (e.g. 500 TSSC) from Anvil address[0] to the address with private key ${DEPLOYER_PRIVATE_KEY}
-3. `$ forge script ./script/lz/LZSetup.s.sol:LZSetupScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url http://127.0.0.1:8545 --broadcast`
+2. `$ forge script ./script/lz/LZSetup.s.sol:LZSetupScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url http://127.0.0.1:8545 --broadcast`
 
 ### For Sepolia
 1. `$ anvil --fork-url $SEPOLIA_RPC_URL --port 8546`
-2. Transfer faucet tokens (e.g. 500 SepoliaETH) from Anvil address[0] to the address with private key ${DEPLOYER_PRIVATE_KEY}
-3. `$ forge script ./script/lz/LZSetup.s.sol:LZSetupScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url http://127.0.0.1:8546 --broadcast`
+2. `$ forge script ./script/lz/LZSetup.s.sol:LZSetupScript --private-key ${DEPLOYER_PRIVATE_KEY} --rpc-url http://127.0.0.1:8546 --broadcast`
 
 
 ## For Nova
@@ -57,14 +56,14 @@ contract LZSetupScript is Script {
     // address endpointV2Address = vm.envAddress("NOVA_ENDPOINT_V2");
     // uint32 private constant LOCAL_EID = 490_000; // for Nova
     // uint32 private constant REMOTE_EID = 40161; // for Sepolia
-    // string constant FILE_NAME = "./lz_infra_addresses_nova.txt";
+    // string constant FILE_NAME = "./lzsetup_addresses_nova.txt";
 
     // Endpoint address, ids,
     // NOTE: Disable comment when deploying on Sepolia
-    address endpointV2Address = vm.envAddress("SEPOLIA_ENDPOINT_V2");
+    // address endpointV2Address = vm.envAddress("SEPOLIA_ENDPOINT_V2");
     uint32 private constant LOCAL_EID = 40161; // for Sepolia
     uint32 private constant REMOTE_EID = 490_000; // for Nova
-    string constant FILE_NAME = "./lz_infra_addresses_sepolia.txt";
+    string constant FILE_NAME = "./lzsetup_addresses_sepolia.txt";
 
     // SendUln302
     uint256 private constant TREASURY_GAS_CAP = 100_000;
@@ -76,8 +75,9 @@ contract LZSetupScript is Script {
     address delegate;
 
     SimpleMessageLib simpleMessageLib;
-    ILayerZeroEndpointV2 endpointV2;
-    // EndpointV2 endpointV2;
+    // ILayerZeroEndpointV2 endpointV2;
+    EndpointV2 endpointV2;
+    EndpointV2View endpointV2View;
     SendUln302 sendUln302;
     ReceiveUln302 receiveUln302;
     PriceFeed priceFeed;
@@ -100,9 +100,13 @@ contract LZSetupScript is Script {
     function run() public {
         vm.startBroadcast(delegate);
 
-        // Endpoint V2 for Nova
-        endpointV2 = ILayerZeroEndpointV2(endpointV2Address);
-        // endpointV2 = new EndpointV2(LOCAL_EID, delegate);
+        // Endpoint V2
+        // endpointV2 = ILayerZeroEndpointV2(endpointV2Address);
+        endpointV2 = new EndpointV2(LOCAL_EID, delegate);
+
+        // for viewing if a message is at what state - verifiable/executable/....
+        endpointV2View = new EndpointV2View();
+        endpointV2View.initialize(address(endpointV2));
 
         treasury = new Treasury();
 
@@ -219,6 +223,7 @@ contract LZSetupScript is Script {
         string memory receiveUln302Hex = Strings.toHexString(uint256(uint160(address(receiveUln302))), 20);
         string memory endpointV1Hex = Strings.toHexString(uint256(uint160(address(endpointV1))), 20);
         string memory endpointV2Hex = Strings.toHexString(uint256(uint160(address(endpointV2))), 20);
+        string memory endpointV2ViewHex = Strings.toHexString(uint256(uint160(address(endpointV2View))), 20);
         string memory priceFeedHex = Strings.toHexString(uint256(uint160(address(priceFeed))), 20);
         string memory executorHex = Strings.toHexString(uint256(uint160(address(executor))), 20);
         string memory executorFeeLibHex = Strings.toHexString(uint256(uint160(address(executorFeeLib))), 20);
@@ -234,6 +239,7 @@ contract LZSetupScript is Script {
         content = string(abi.encodePacked(content, "ReceiveUln302=", receiveUln302Hex, "\n"));
         content = string(abi.encodePacked(content, "EndpointV1=", endpointV1Hex, "\n"));
         content = string(abi.encodePacked(content, "EndpointV2=", endpointV2Hex, "\n"));
+        content = string(abi.encodePacked(content, "EndpointV2View=", endpointV2ViewHex, "\n"));
         content = string(abi.encodePacked(content, "PriceFeed=", priceFeedHex, "\n"));
         content = string(abi.encodePacked(content, "Executor=", executorHex, "\n"));
         content = string(abi.encodePacked(content, "ExecutorFeeLib=", executorFeeLibHex, "\n"));
