@@ -12,11 +12,14 @@ import {IDVN} from "@layerzerolabs/messagelib/contracts/uln/interfaces/IDVN.sol"
 import {PacketV1Codec} from "@layerzerolabs/protocol/contracts/messagelib/libs/PacketV1Codec.sol";
 import {PacketV1CodecWrapper} from "@layerzerolabs/protocol/test/libtests/PacketV1Codec.t.sol";
 /* 
-    Run on Destination chain (Sepolia here) for DVN, Executor roles.
+    Run on Destination chain for DVN, Executor roles.
 
-    Sepolia: forge script script/lz/AutoBridgeDVN.sol:AutoBridgeDVNScript --private-key $DEPLOYER_PRIVATE_KEY --rpc-url $SEPOLIA_RPC_URL --broadcast -vvvv
+    Nova Anvil: forge script script/lz/AutoBridgeDVN.s.sol:AutoBridgeDVNScript --private-key $DEPLOYER_PRIVATE_KEY --rpc-url http://127.0.0.1:8545 --broadcast --legacy -vvvv
+    Sepolia: forge script script/lz/AutoBridgeDVN.s.sol:AutoBridgeDVNScript --private-key $DEPLOYER_PRIVATE_KEY --rpc-url $SEPOLIA_RPC_URL --broadcast -vvvv
 */
 
+/// @dev This script is for manually executing the missed messages. Suppose, msg with nonce 1 is missed and msg with nonce 2 fails to execute via Bridge TS script.
+///         In this case, we can manually execute the missed message (w nonce 1) via this script.
 contract AutoBridgeDVNScript is Script, Test {
     ILayerZeroEndpointV2 endpointV2Dst;
     IReceiveLib receiveUlnE2Dst;
@@ -30,13 +33,21 @@ contract AutoBridgeDVNScript is Script, Test {
         uint256 privateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
         delegate = vm.addr(privateKey);
 
-        // dst contracts
+        // =================================================================================
+        /* Disable comment for Nova to Sepolia */
+        // dst contracts, EID
         endpointV2Dst = ILayerZeroEndpointV2(vm.envAddress("SEPOLIA_ENDPOINT_V2"));
         wTsscLzDst = IWTsscLz(payable(vm.envAddress("WTSSCLZ_SEPOLIA")));
-
-        // endpoint IDs
-        // dstEid = endpointV2Dst.eid();
         srcEid = uint32(vm.envUint("NOVA_ENDPOINT_V2_ID"));
+        // =================================================================================
+
+        // =================================================================================
+        /* Disable comment for Sepolia to Nova */
+        // dst contracts, EID
+        // endpointV2Dst = ILayerZeroEndpointV2(vm.envAddress("NOVA_ENDPOINT_V2"));
+        // wTsscLzDst = IWTsscLz(payable(vm.envAddress("WTSSCLZ_NOVA")));
+        // srcEid = uint32(vm.envUint("SEPOLIA_ENDPOINT_V2_ID"));
+        // =================================================================================
     }
 
     function run() public {
@@ -45,7 +56,7 @@ contract AutoBridgeDVNScript is Script, Test {
         // This encodedPacket is received from src chain (Nova here).
         // As this is a foundry script and can't be hosted to listen to emitted events, so hardcoded.
         bytes memory encodedPacket =
-            hex"01000000000000002f00077a10000000000000000000000000fe4430822f79b1fb24f67593df68947de6a96b2800009ce1000000000000000000000000cfe0a0163b7f5bcea14e7beb4da1fe1a2136f5ff58bda940f1c9956f302cacd61974c7fc1b2a9746fd6aab410ed1d1012a7825ac000000000000000000000000b751710af8ce68677ab960adb103060f38d097140000000000002710";
+            hex"01000000000000000d00077a10000000000000000000000000a66782c958e08275566463cb76a7892e72f2edb100009ce10000000000000000000000008ecc60d2a42747742b9fc67fb25de774677e260e4305366c89dfe7e1d1efd0517970e906076681de77f1381ff4cad53de1441db9000000000000000000000000b751710af8ce68677ab960adb103060f38d097140000000000002710";
         // 3. After receiving the fee, your DVN should query the address of the MessageLib on the destination chain
         address receiveUln302DstAddress = endpointV2Dst.defaultReceiveLibrary(srcEid);
         receiveUlnE2Dst = IReceiveLib(receiveUln302DstAddress);
@@ -75,22 +86,6 @@ contract AutoBridgeDVNScript is Script, Test {
         // verify and commit verification
         receiveUlnE2Dst.commitVerification(packetHeader, _payloadHash);
 
-        // CLEANUP: remove later
-        // verified
-        // assertEq(uint256(receiveUln302View.verifiable(packetHeader,_payloadHash)), uint256(VerificationState.Verified));
-        // executable
-        // assertEq(uint256(lzExecutor.executable(origin, receiver)), uint256(ExecutionState.Executable));
-
-        /* Executor's job */
-
-        // commit and execute
-        // NativeDropParam[] memory nativeDrop = new NativeDropParam[](0);
-        // lzExecutor.commitAndExecute(
-        //     address(receiveUln302),
-        //     LzReceiveParam(origin, receiver, packet.guid, packet.message, "", 100000, 0),
-        //     nativeDrop
-        // );
-
         Origin memory origin = Origin(
             PacketV1CodecWrapper.srcEid(encodedPacket),
             PacketV1CodecWrapper.sender(encodedPacket),
@@ -99,7 +94,7 @@ contract AutoBridgeDVNScript is Script, Test {
 
         address _receiver = PacketV1CodecWrapper.receiverB20(encodedPacket);
 
-        // TODO: call lzReceive function
+        // call lzReceive function
         endpointV2Dst.lzReceive(
             origin, _receiver, PacketV1CodecWrapper.guid(encodedPacket), PacketV1CodecWrapper.message(encodedPacket), ""
         );
