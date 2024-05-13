@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.19;
+pragma solidity 0.8.24;
 
 /// @title Fund contract
 /// @notice This contract is used to transfer TSSC to single/multiple addresses

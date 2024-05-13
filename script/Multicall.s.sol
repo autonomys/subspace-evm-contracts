@@ -6,7 +6,7 @@ import {Multicall3} from "../src/Multicall.sol";
 
 /* 
     $ source .env
-    $ forge script script/Multicall.s.sol:MulticallContractScript --rpc-url $NOVA_RPC_URL --private-key $DEPLOYER_PRIVATE_KEY --broadcast --verify --verifier blockscout --verifier-url $VERIFIER_URL
+    $ forge script script/Multicall.s.sol:MulticallContractScript --rpc-url $NOVA_RPC_URL --private-key $DEPLOYER_PRIVATE_KEY --broadcast --verify --verifier blockscout --verifier-url $NOVA_VERIFIER_URL
 */
 
 contract MulticallScript is Script {

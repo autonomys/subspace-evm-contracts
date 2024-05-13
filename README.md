@@ -2,7 +2,7 @@
 
 This repository contains the relevant EVM Contracts that are deployed on Subspace Nova. This could perhaps be considered as a one-stop shop for all the relevant contracts, libraries deployed on Subspace Nova.
 
-> Currently, the contracts are deployed on the `gemini-3g` Nova chain with chain ID `1002`.
+> Currently, the contracts are deployed on the `gemini-3h` Nova chain with chain ID `490000`.
 
 ## Usage
 
@@ -10,7 +10,10 @@ This repository contains the relevant EVM Contracts that are deployed on Subspac
 
 #### Build
 
+> Install bun from [here](https://bun.sh/docs/installation).
+
 ```sh
+bun install
 forge build
 ```
 

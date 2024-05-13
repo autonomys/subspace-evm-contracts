@@ -13,7 +13,7 @@
  *  Architecture diagram: https://github.com/subspace/subspace-evm-contracts/blob/add-receiver-pay-contract/img/sc-senders-treasury.png
  */
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.23;
+pragma solidity 0.8.24;
 
 contract SendersTreasury {
     /// ===== State Variables =====

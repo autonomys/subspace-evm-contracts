@@ -19,3 +19,12 @@ target/
 
 .DS_Store
 .vscode/
+
+# Remix
+.deps/
+.deploys/
+compiler_config.json
+*/artifacts/*
+
+# node
+node_modules/
